@@ -19,7 +19,7 @@
 		
 		<div>	
 			<input type="submit" value="<?php echo __( 'Restore password', 'clean-login' ); ?>" name="submit">
-			<input type="hidden" name="action" value="restore">		
+			<input type="hidden" name="action" value="restore">	
 		</div>
 
 	</form>

@@ -1,10 +1,10 @@
 === Clean Login ===
 Contributors: hornero, carazo
 Donate link: https://codection.com/?post_type=surl&p=8712&preview=true
-Tags: form, login, registration, editor, lost password, responsive, wpml, internationalization, languages, role, CAPTCHA, reCaptcha, honeypot, shortcode, wordpress, frontend
+Tags: form, login, registration, editor, lost password
 Requires at least: 3.4
-Tested up to: 6.6.2
-Stable tag: 1.14.6
+Tested up to: 6.9.4
+Stable tag: 1.15
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -74,6 +74,10 @@ Please, refer to [Installation section](https://wordpress.org/plugins/clean-logi
 12. WPML. Certificate of Compatibility
 
 == Changelog ==
+
+= 1.15 =
+*   Ready for WordPress 6.9.4
+*   Now, when a user changes their email, the plugin no longer redirects them to profile.php in wp-admin. All the UI is handled within the plugin’s profile page
 
 = 1.14.6 =
 *   Sanitized file templates variables

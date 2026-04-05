@@ -5,6 +5,7 @@ class CleanLogin_Controller{
         add_action( 'template_redirect', array( $this, 'prevent_cache_login_form' ) );
         add_action( 'template_redirect', array( $this, 'controller' ) );
         add_action( 'cleanlogin_before_login_edit_form_container', array( $this, 'maybe_show_email_change_pending_notification' ) );
+        add_action( 'load-profile.php', array( $this, 'redirect_email_change_to_frontend' ) );
     }
 
     function prevent_cache_login_form(){
@@ -558,6 +559,18 @@ class CleanLogin_Controller{
 	
 		return get_option('cl_register_redirect_url', false) ? esc_url( apply_filters( 'cl_register_redirect_url', CleanLogin_Controller::get_translated_option_page('cl_register_redirect_url' ) ) ): false;
 	}
+
+    function redirect_email_change_to_frontend(){
+        if( !isset( $_GET['newuseremail'] ) || empty( $_GET['newuseremail'] ) )
+            return;
+
+        $edit_url = self::get_edit_url();
+        if( empty( $edit_url ) )
+            return;
+
+        wp_safe_redirect( esc_url( add_query_arg( 'newuseremail', sanitize_text_field( $_GET['newuseremail'] ), $edit_url ) ) );
+        exit;
+    }
 
     function send_confirmation_email( $email ){
 	    $current_user = wp_get_current_user();
