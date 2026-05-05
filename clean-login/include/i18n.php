@@ -1,5 +1,7 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 function clean_login_load_textdomain(){
 	load_plugin_textdomain( 'clean-login', false, dirname( plugin_basename( __FILE__ ) ) . '/lang/' );
 }

@@ -1,11 +1,11 @@
 <?php
 session_start();
 
-$captcha = new SimpleCaptcha();
-$captcha->CreateImage();
+$cleanlogin_captcha = new CleanLogin_Captcha();
+$cleanlogin_captcha->CreateImage();
 
 
-class SimpleCaptcha {
+class CleanLogin_Captcha {
 
     /** Width of the image */
     public $width  = 200;
@@ -145,7 +145,7 @@ class SimpleCaptcha {
         imagefilledrectangle($this->im, 0, 0, $this->width*$this->scale, $this->height*$this->scale, $this->GdBgColor);
 
         // Foreground color
-        $color           = $this->colors[mt_rand(0, sizeof($this->colors)-1)];
+        $color           = $this->colors[wp_rand(0, sizeof($this->colors)-1)];
         $this->GdFgColor = imagecolorallocate($this->im, $color[0], $color[1], $color[2]);
 
         // Shadow color
@@ -176,19 +176,19 @@ class SimpleCaptcha {
      */
     protected function GetRandomCaptchaText($length = null) {
         if (empty($length)) {
-            $length = rand($this->minWordLength, $this->maxWordLength);
+            $length = wp_rand($this->minWordLength, $this->maxWordLength);
         }
 
         $words  = "abcdefghijlmnopqrstvwyz";
         $vocals = "aeiou";
 
         $text  = "";
-        $vocal = rand(0, 1);
+        $vocal = wp_rand(0, 1);
         for ($i=0; $i<$length; $i++) {
             if ($vocal) {
-                $text .= substr($vocals, mt_rand(0, 4), 1);
+                $text .= substr($vocals, wp_rand(0, 4), 1);
             } else {
-                $text .= substr($words, mt_rand(0, 22), 1);
+                $text .= substr($words, wp_rand(0, 22), 1);
             }
             $vocal = !$vocal;
         }
@@ -202,8 +202,8 @@ class SimpleCaptcha {
 
         $x1 = $this->width*$this->scale*.15;
         $x2 = $this->textFinalX;
-        $y1 = rand($this->height*$this->scale*.40, $this->height*$this->scale*.65);
-        $y2 = rand($this->height*$this->scale*.40, $this->height*$this->scale*.65);
+        $y1 = wp_rand($this->height*$this->scale*.40, $this->height*$this->scale*.65);
+        $y2 = wp_rand($this->height*$this->scale*.40, $this->height*$this->scale*.65);
         $width = $this->lineWidth/2*$this->scale;
 
         for ($i = $width*-1; $i <= $width; $i++) {
@@ -233,8 +233,8 @@ class SimpleCaptcha {
         $y      = round(($this->height*27/40)*$this->scale);
         $length = strlen($text);
         for ($i=0; $i<$length; $i++) {
-            $degree   = rand($this->maxRotation*-1, $this->maxRotation);
-            $fontsize = rand($fontcfg['minSize'], $fontcfg['maxSize'])*$this->scale*$fontSizefactor;
+            $degree   = wp_rand($this->maxRotation*-1, $this->maxRotation);
+            $fontsize = wp_rand($fontcfg['minSize'], $fontcfg['maxSize'])*$this->scale*$fontSizefactor;
             $letter   = substr($text, $i, 1);
 
             if ($this->shadowColor) {
@@ -256,8 +256,8 @@ class SimpleCaptcha {
      */
     protected function WaveImage() {
         // X-axis wave generation
-        $xp = $this->scale*$this->Xperiod*rand(1,3);
-        $k = rand(0, 100);
+        $xp = $this->scale*$this->Xperiod*wp_rand(1,3);
+        $k = wp_rand(0, 100);
         for ($i = 0; $i < ($this->width*$this->scale); $i++) {
             imagecopy($this->im, $this->im,
                 $i-1, sin($k+$i/$xp) * ($this->scale*$this->Xamplitude),
@@ -265,8 +265,8 @@ class SimpleCaptcha {
         }
 
         // Y-axis wave generation
-        $k = rand(0, 100);
-        $yp = $this->scale*$this->Yperiod*rand(1,2);
+        $k = wp_rand(0, 100);
+        $yp = $this->scale*$this->Yperiod*wp_rand(1,2);
         for ($i = 0; $i < ($this->height*$this->scale); $i++) {
             imagecopy($this->im, $this->im,
                 sin($k+$i/$yp) * ($this->scale*$this->Yamplitude), $i-1,
@@ -278,7 +278,7 @@ class SimpleCaptcha {
      * Reduce the image to the final size
      */
     protected function ReduceImage() {
-        // Reduzco el tamaño de la imagen
+        // Reduzco el tamaï¿½o de la imagen
         $imResampled = imagecreatetruecolor($this->width, $this->height);
         imagecopyresampled($imResampled, $this->im,
             0, 0, 0, 0,

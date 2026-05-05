@@ -3,8 +3,8 @@ Contributors: hornero, carazo
 Donate link: https://codection.com/?post_type=surl&p=8712&preview=true
 Tags: form, login, registration, editor, lost password
 Requires at least: 3.4
-Tested up to: 6.9.4
-Stable tag: 1.15
+Tested up to: 6.9
+Stable tag: 1.16
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -74,6 +74,11 @@ Please, refer to [Installation section](https://wordpress.org/plugins/clean-logi
 12. WPML. Certificate of Compatibility
 
 == Changelog ==
+
+= 1.16 =
+*   Security issues fixed
+*   Code improvements
+*   Hooks renamed
 
 = 1.15 =
 *   Ready for WordPress 6.9.4

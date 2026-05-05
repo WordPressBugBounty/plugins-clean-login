@@ -1,5 +1,7 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 class CleanLogin_Shortcode{
 	function load(){
 		add_shortcode( 'clean-login', array( $this, 'clean_login' ) );
@@ -26,21 +28,22 @@ class CleanLogin_Shortcode{
 	function clean_login( $atts ) {
 		ob_start();
 		
-		if ( isset( $_GET['authentication'] ) ) {
-			if( $_GET['authentication'] == 'wrongcaptcha' )
-			echo "<div class='cleanlogin-notification error'><p>". __( 'CAPTCHA is not valid, please try again', 'clean-login' ) ."</p></div>";
-			elseif( $_GET['authentication'] == 'success' )
-				echo "<div class='cleanlogin-notification success'><p>". __( 'Successfully logged in!', 'clean-login' ) ."</p></div>";
-			elseif( $_GET['authentication'] == 'failed' )
-				echo "<div class='cleanlogin-notification error'><p>". __( 'Wrong credentials', 'clean-login' ) ."</p></div>";
-			elseif( $_GET['authentication'] == 'logout' )
-				echo "<div class='cleanlogin-notification success'><p>". __( 'Successfully logged out!', 'clean-login' ) ."</p></div>";
-			elseif( $_GET['authentication'] == 'failed-activation' )
-				echo "<div class='cleanlogin-notification error'><p>". __( 'Something went wrong while activating your user', 'clean-login' ) ."</p></div>";
-			elseif( $_GET['authentication'] == 'disabled' )
-				echo "<div class='cleanlogin-notification error'><p>". __( 'Your account is currently disabled', 'clean-login' ) ."</p></div>";
-			elseif( $_GET['authentication'] == 'success-activation' )
-				echo "<div class='cleanlogin-notification success'><p>". __( 'Successfully activated', 'clean-login' ) ."</p></div>";
+		if ( isset( $_GET['authentication'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$authentication = sanitize_text_field( wp_unslash( $_GET['authentication'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			if( $authentication == 'wrongcaptcha' )
+				echo "<div class='cleanlogin-notification error'><p>". esc_html__( 'CAPTCHA is not valid, please try again', 'clean-login' ) ."</p></div>";
+			elseif( $authentication == 'success' )
+				echo "<div class='cleanlogin-notification success'><p>". esc_html__( 'Successfully logged in!', 'clean-login' ) ."</p></div>";
+			elseif( $authentication == 'failed' )
+				echo "<div class='cleanlogin-notification error'><p>". esc_html__( 'Wrong credentials', 'clean-login' ) ."</p></div>";
+			elseif( $authentication == 'logout' )
+				echo "<div class='cleanlogin-notification success'><p>". esc_html__( 'Successfully logged out!', 'clean-login' ) ."</p></div>";
+			elseif( $authentication == 'failed-activation' )
+				echo "<div class='cleanlogin-notification error'><p>". esc_html__( 'Something went wrong while activating your user', 'clean-login' ) ."</p></div>";
+			elseif( $authentication == 'disabled' )
+				echo "<div class='cleanlogin-notification error'><p>". esc_html__( 'Your account is currently disabled', 'clean-login' ) ."</p></div>";
+			elseif( $authentication == 'success-activation' )
+				echo "<div class='cleanlogin-notification success'><p>". esc_html__( 'Successfully activated', 'clean-login' ) ."</p></div>";
 		}
 
 		if ( is_user_logged_in() ) {
@@ -57,32 +60,32 @@ class CleanLogin_Shortcode{
 	
 		ob_start();
 	
-		if ( isset( $_GET['updated'] ) ) {
-			$updated_result = sanitize_text_field( $_GET['updated'] );
+		if ( isset( $_GET['updated'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$updated_result = sanitize_text_field( wp_unslash( $_GET['updated'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
 			switch( $updated_result ){
 				case 'success':
-					echo "<div class='cleanlogin-notification success'><p>". __( 'Information updated', 'clean-login' ) ."</p></div>";
+					echo "<div class='cleanlogin-notification success'><p>". esc_html__( 'Information updated', 'clean-login' ) ."</p></div>";
 					break;
 
 				case 'emailchangedsuccess':
-					echo "<div class='cleanlogin-notification success'><p>". __( 'Confirmed email change', 'clean-login' ) ."</p></div>";
+					echo "<div class='cleanlogin-notification success'><p>". esc_html__( 'Confirmed email change', 'clean-login' ) ."</p></div>";
 					break;
 
 				case 'passcomplex':
-					echo "<div class='cleanlogin-notification error'><p>". __( 'Passwords must be eight characters including one upper/lowercase letter, one special/symbol character and alphanumeric characters. Passwords should not contain the user\'s username, email, or first/last name.', 'clean-login' ) ."</p></div>";
+					echo "<div class='cleanlogin-notification error'><p>". esc_html__( 'Passwords must be eight characters including one upper/lowercase letter, one special/symbol character and alphanumeric characters. Passwords should not contain the user\'s username, email, or first/last name.', 'clean-login' ) ."</p></div>";
 					break;
 
 				case 'wrongpass':
-					echo "<div class='cleanlogin-notification error'><p>". __( 'Passwords must be identical', 'clean-login' ) ."</p></div>";
+					echo "<div class='cleanlogin-notification error'><p>". esc_html__( 'Passwords must be identical', 'clean-login' ) ."</p></div>";
 					break;
 
 				case 'wrongmail':
-					echo "<div class='cleanlogin-notification error'><p>". __( 'Error updating email', 'clean-login' ) ."</p></div>";
+					echo "<div class='cleanlogin-notification error'><p>". esc_html__( 'Error updating email', 'clean-login' ) ."</p></div>";
 					break;
 
 				case 'failed':
-					echo "<div class='cleanlogin-notification error'><p>". __( 'Something strange has ocurred', 'clean-login' ) ."</p></div>";
+					echo "<div class='cleanlogin-notification error'><p>". esc_html__( 'Something strange has ocurred', 'clean-login' ) ."</p></div>";
 					break;				
 			}
 		}
@@ -90,7 +93,7 @@ class CleanLogin_Shortcode{
 		if ( is_user_logged_in() ) {
 			CleanLogin_Frontend::get_template_file( 'login-edit.php', $atts );
 		} else {
-			echo "<div class='cleanlogin-notification error'><p>". __( 'You need to be logged in to edit your profile', 'clean-login' ) ."</p></div>";
+			echo "<div class='cleanlogin-notification error'><p>". esc_html__( 'You need to be logged in to edit your profile', 'clean-login' ) ."</p></div>";
 			CleanLogin_Frontend::get_template_file( 'login-form.php' );
 		}
 	
@@ -99,7 +102,7 @@ class CleanLogin_Shortcode{
 	
 	function clean_login_register( $atts ){
 		if( !get_option( 'users_can_register' ) ){
-			echo "<div class='cleanlogin-notification error'><p>". __( 'Registration is not allowed in this site', 'clean-login' ) ."</p></div>";
+			echo "<div class='cleanlogin-notification error'><p>". esc_html__( 'Registration is not allowed in this site', 'clean-login' ) ."</p></div>";
 			return;
 		}
 		
@@ -113,39 +116,40 @@ class CleanLogin_Shortcode{
 	
 		ob_start();
 
-		if ( isset( $_GET['created'] ) ) {
-			if ( $_GET['created'] == 'success' )
-				echo "<div class='cleanlogin-notification success'><p>". __( 'User created', 'clean-login' ) ."</p></div>";
-			else if ( $_GET['created'] == 'success-link' )
-				echo "<div class='cleanlogin-notification success'><p>". __( 'User created', 'clean-login' ) ."<br>". __( 'Please confirm your account, you will receive an email', 'clean-login' ) ."</p></div>";
-			else if ( $_GET['created'] == 'created' )
-				echo "<div class='cleanlogin-notification success'><p>". __( 'New user created', 'clean-login' ) ."</p></div>";
-			else if ( $_GET['created'] == 'passcomplex' )
-				echo "<div class='cleanlogin-notification error'><p>". __( 'Passwords must be eight characters including one upper/lowercase letter, one special/symbol character and alphanumeric characters. Passwords should not contain the user\'s username, email, or first/last name.', 'clean-login' ) ."</p></div>";
-			else if ( $_GET['created'] == 'wronguser' )
-				echo "<div class='cleanlogin-notification error'><p>". __( 'Username is not valid', 'clean-login' ) ."</p></div>";
-			else if ( $_GET['created'] == 'wrongname' )
-				echo "<div class='cleanlogin-notification error'><p>". __( 'First name is not valid', 'clean-login' ) ."</p></div>";
-			else if ( $_GET['created'] == 'wrongsurname' )
-				echo "<div class='cleanlogin-notification error'><p>". __( 'Last name is not valid', 'clean-login' ) ."</p></div>";
-			else if ( $_GET['created'] == 'wrongpass' )
-				echo "<div class='cleanlogin-notification error'><p>". __( 'Passwords must be identical and filled', 'clean-login' ) ."</p></div>";
-			else if ( $_GET['created'] == 'wrongmail' )
-				echo "<div class='cleanlogin-notification error'><p>". __( 'Email is not valid', 'clean-login' ) ."</p></div>";
-			else if ( $_GET['created'] == 'emailexists' )
-				echo "<div class='cleanlogin-notification error'><p>". __( 'There is already a user registered with this email. Login with this existing account. If you do not remember your password, you will find a recuperation link at the login form.', 'clean-login' ) ."</p></div>";
-			else if ( $_GET['created'] == 'wrongcaptcha' )
-				echo "<div class='cleanlogin-notification error'><p>". __( 'CAPTCHA is not valid, please try again', 'clean-login' ) ."</p></div>";
-			else if ( $_GET['created'] == 'failed' )
-				echo "<div class='cleanlogin-notification error'><p>". __( 'Something strange has ocurred while created the new user', 'clean-login' ) ."</p></div>";
-			else if ( $_GET['created'] == 'terms' )
-				echo "<div class='cleanlogin-notification error'><p>\"". get_option ( 'cl_termsconditionsMSG' ) . '" ' .__( 'must be checked', 'clean-login' ) . "</p></div>";
+		if ( isset( $_GET['created'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$created = sanitize_text_field( wp_unslash( $_GET['created'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			if ( $created == 'success' )
+				echo "<div class='cleanlogin-notification success'><p>". esc_html__( 'User created', 'clean-login' ) ."</p></div>";
+			else if ( $created == 'success-link' )
+				echo "<div class='cleanlogin-notification success'><p>". esc_html__( 'User created', 'clean-login' ) ."<br>". esc_html__( 'Please confirm your account, you will receive an email', 'clean-login' ) ."</p></div>";
+			else if ( $created == 'created' )
+				echo "<div class='cleanlogin-notification success'><p>". esc_html__( 'New user created', 'clean-login' ) ."</p></div>";
+			else if ( $created == 'passcomplex' )
+				echo "<div class='cleanlogin-notification error'><p>". esc_html__( 'Passwords must be eight characters including one upper/lowercase letter, one special/symbol character and alphanumeric characters. Passwords should not contain the user\'s username, email, or first/last name.', 'clean-login' ) ."</p></div>";
+			else if ( $created == 'wronguser' )
+				echo "<div class='cleanlogin-notification error'><p>". esc_html__( 'Username is not valid', 'clean-login' ) ."</p></div>";
+			else if ( $created == 'wrongname' )
+				echo "<div class='cleanlogin-notification error'><p>". esc_html__( 'First name is not valid', 'clean-login' ) ."</p></div>";
+			else if ( $created == 'wrongsurname' )
+				echo "<div class='cleanlogin-notification error'><p>". esc_html__( 'Last name is not valid', 'clean-login' ) ."</p></div>";
+			else if ( $created == 'wrongpass' )
+				echo "<div class='cleanlogin-notification error'><p>". esc_html__( 'Passwords must be identical and filled', 'clean-login' ) ."</p></div>";
+			else if ( $created == 'wrongmail' )
+				echo "<div class='cleanlogin-notification error'><p>". esc_html__( 'Email is not valid', 'clean-login' ) ."</p></div>";
+			else if ( $created == 'emailexists' )
+				echo "<div class='cleanlogin-notification error'><p>". esc_html__( 'There is already a user registered with this email. Login with this existing account. If you do not remember your password, you will find a recuperation link at the login form.', 'clean-login' ) ."</p></div>";
+			else if ( $created == 'wrongcaptcha' )
+				echo "<div class='cleanlogin-notification error'><p>". esc_html__( 'CAPTCHA is not valid, please try again', 'clean-login' ) ."</p></div>";
+			else if ( $created == 'failed' )
+				echo "<div class='cleanlogin-notification error'><p>". esc_html__( 'Something strange has ocurred while created the new user', 'clean-login' ) ."</p></div>";
+			else if ( $created == 'terms' )
+				echo "<div class='cleanlogin-notification error'><p>\"". esc_html( get_option( 'cl_termsconditionsMSG' ) ) . '" ' . esc_html__( 'must be checked', 'clean-login' ) . "</p></div>";
 		}
 	
 		if ( !is_user_logged_in() ) {
 			CleanLogin_Frontend::get_template_file( sanitize_file_name( $param['template'] ), $param );
 		} else {
-			echo "<div class='cleanlogin-notification error'><p>". __( 'You are now logged in. It makes no sense to register a new user', 'clean-login' ) ."</p></div>";
+			echo "<div class='cleanlogin-notification error'><p>". esc_html__( 'You are now logged in. It makes no sense to register a new user', 'clean-login' ) ."</p></div>";
 			CleanLogin_Frontend::get_template_file( 'login-preview.php' );
 		}
 	
@@ -155,24 +159,25 @@ class CleanLogin_Shortcode{
 	function clean_login_restore( $atts ) {
 		ob_start();
 	
-		if ( isset( $_GET['sent'] ) ) {
-			if ( $_GET['sent'] == 'success' )
-				echo "<div class='cleanlogin-notification success'><p>". __( 'You will receive an email with the activation link', 'clean-login' ) ."</p></div>";
-			else if ( $_GET['sent'] == 'sent' )
-				echo "<div class='cleanlogin-notification success'><p>". __( 'You may receive an email with the activation link', 'clean-login' ) ."</p></div>";
-			else if ( $_GET['sent'] == 'failed' )
-				echo "<div class='cleanlogin-notification error'><p>". __( 'An error has ocurred sending the email', 'clean-login' ) ."</p></div>";
-			else if ( $_GET['sent'] == 'wronguser' )
-				echo "<div class='cleanlogin-notification error'><p>". __( 'Username is not valid', 'clean-login' ) ."</p></div>";
+		if ( isset( $_GET['sent'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$sent = sanitize_text_field( wp_unslash( $_GET['sent'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			if ( $sent == 'success' )
+				echo "<div class='cleanlogin-notification success'><p>". esc_html__( 'You will receive an email with the activation link', 'clean-login' ) ."</p></div>";
+			else if ( $sent == 'sent' )
+				echo "<div class='cleanlogin-notification success'><p>". esc_html__( 'You may receive an email with the activation link', 'clean-login' ) ."</p></div>";
+			else if ( $sent == 'failed' )
+				echo "<div class='cleanlogin-notification error'><p>". esc_html__( 'An error has ocurred sending the email', 'clean-login' ) ."</p></div>";
+			else if ( $sent == 'wronguser' )
+				echo "<div class='cleanlogin-notification error'><p>". esc_html__( 'Username is not valid', 'clean-login' ) ."</p></div>";
 		}
 	
 		if ( !is_user_logged_in() ) {
-			if ( isset( $_GET['pass_changed'] ) ) {
+			if ( isset( $_GET['pass_changed'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 				CleanLogin_Frontend::get_template_file( 'restore-new.php' );
 			} else
 				CleanLogin_Frontend::get_template_file( 'restore-form.php' );
 		} else {
-			echo "<div class='cleanlogin-notification error'><p>". __( 'You are now logged in. It makes no sense to restore your account', 'clean-login' ) ."</p></div>";
+			echo "<div class='cleanlogin-notification error'><p>". esc_html__( 'You are now logged in. It makes no sense to restore your account', 'clean-login' ) ."</p></div>";
 			CleanLogin_Frontend::get_template_file( 'login-preview.php' );
 		}
 	

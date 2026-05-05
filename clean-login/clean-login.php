@@ -4,16 +4,18 @@ Plugin Name: Clean Login
 Plugin URI: https://codection.com
 Description: Responsive Frontend Login and Registration plugin. A plugin for displaying login, register, editor and restore password forms through shortcodes. [clean-login] [clean-login-edit] [clean-login-register] [clean-login-restore]
 Author: codection
-Version: 1.15
+Version: 1.16
 Author URI: https://codection.com
 Text Domain: clean-login
 Domain Path: /lang
+License: GPL-2.0-or-later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
 */
 
 if ( ! defined( 'ABSPATH' ) ) 
 	exit; 
 
-define( "CLEAN_LOGIN_VERSION", "1.15" );
+define( "CLEAN_LOGIN_VERSION", "1.16" );
 define( "CLEAN_LOGIN_PATH", plugin_dir_path( __FILE__ ) );
 define( "CLEAN_LOGIN_URL", plugin_dir_url( __FILE__ ) );
 define( "CLEAN_LOGIN_CAPTCHA_URL", plugins_url( 'content/captcha', __FILE__ ) );
@@ -98,8 +100,8 @@ class CleanLogin{
 		if( get_option('cl_logout_redirect', false) == '' )
 			return;
 	
-		$logoutredirect_url = get_option('cl_logout_redirect_url', false) ? esc_url( apply_filters( 'cl_logout_redirect_url', CleanLogin_Controller::get_translated_option_page('cl_logout_redirect_url' ) ) ): home_url();
-		wp_redirect( $logoutredirect_url );
+		$logoutredirect_url = get_option('cl_logout_redirect_url', false) ? esc_url( apply_filters( 'clean_login_logout_redirect_url', CleanLogin_Controller::get_translated_option_page('cl_logout_redirect_url' ) ) ): home_url();
+		wp_safe_redirect( $logoutredirect_url );
 		exit();
 	}
 }

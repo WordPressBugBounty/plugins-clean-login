@@ -1,5 +1,7 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 class CleanLogin_Roles{
     function __construct(){        
     }
