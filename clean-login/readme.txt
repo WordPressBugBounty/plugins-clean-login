@@ -4,7 +4,7 @@ Donate link: https://codection.com/?post_type=surl&p=8712&preview=true
 Tags: form, login, registration, editor, lost password
 Requires at least: 3.4
 Tested up to: 6.9
-Stable tag: 1.16
+Stable tag: 1.16.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -74,6 +74,15 @@ Please, refer to [Installation section](https://wordpress.org/plugins/clean-logi
 12. WPML. Certificate of Compatibility
 
 == Changelog ==
+
+= 1.16.1 =
+*   Documentation updated with upgrade notes for breaking changes introduced in 1.16
+
+**Upgrade notes for 1.16:**
+
+*Mandatory nonces:* Strict nonce verification (`clean_login_wpnonce` and `cl_nonce`) was added to login and password recovery. Anyone overriding `login-form.php` or `restore-form.php` in their theme will get broken submissions (`?sent=failed`) until they manually add these hidden inputs. There are no log messages that identify what has failed. On the reset password page it just says "An error has ocurred sending the email". Note there's a typo on "occurred" too.
+
+*Hook changes:* The note "Hooks renamed" is too generic. For example, changing the filter `cl_login_form` to `clean_login_login_form` silently breaks custom templates based on previous versions. Please list the specific changes.
 
 = 1.16 =
 *   Security issues fixed
