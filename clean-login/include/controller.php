@@ -64,20 +64,26 @@ class CleanLogin_Controller{
 
         // LOGIN
         if ( $cleanlogin_action == 'login' ) {
+            // Use the configured login page URL as the base for error redirects so the
+            // error message always lands on the page with the [clean-login] shortcode,
+            // regardless of whether the HTTP referer is available or valid.
+            $login_page_url   = CleanLogin_Controller::get_login_url();
+            $error_url        = !empty( $login_page_url ) ? $this->url_cleaner( $login_page_url ) : $url;
+
             $enable_gcaptcha = get_option( 'cl_gcaptcha' );
             if( $enable_gcaptcha && !$this->valid_gcaptcha() ){
-                $url = add_query_arg( 'authentication', 'wrongcaptcha', $url );
+                $url = add_query_arg( 'authentication', 'wrongcaptcha', $error_url );
             }
             else{
                 $user = ( $cleanlogin_has_verified_nonce ) ? wp_signon() : new WP_Error( 'invalid_nonce', __( 'Invalid NONCE, please try again.', 'clean-login' ) );
 
                 if ( is_wp_error( $user ) )
-                    $url = add_query_arg( 'authentication', 'failed', $url );
+                    $url = add_query_arg( 'authentication', 'failed', $error_url );
                 else {
                     // if the user is disabled
                     if( empty($user->roles) ) {
                         wp_logout();
-                        $url = add_query_arg( 'authentication', 'disabled', $url );
+                        $url = add_query_arg( 'authentication', 'disabled', $error_url );
                     }
                     else {
                         $url = get_option( 'cl_login_redirect', false) ? esc_url( apply_filters('clean_login_login_redirect_url', CleanLogin_Controller::get_translated_option_page('cl_login_redirect_url'), $user)): esc_url( add_query_arg( 'authentication', 'success', $url ) );
@@ -89,8 +95,9 @@ class CleanLogin_Controller{
                     }
                 }
             }
-            
+
             wp_safe_redirect( $url );
+            exit();
         // LOGOUT
         } else if ( $cleanlogin_action == 'logout' ) {
             wp_logout();

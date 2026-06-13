@@ -8,7 +8,8 @@ class CleanLogin_Shortcode{
 		add_shortcode( 'clean-login-edit', array( $this, 'clean_login_edit' ) );
 		add_shortcode( 'clean-login-register', array( $this, 'clean_login_register' ) );
 		add_shortcode( 'clean-login-restore', array( $this, 'clean_login_restore' ) );
-		
+		add_shortcode( 'clean-login-change-password', array( $this, 'clean_login_change_password' ) );
+
 		add_action( 'save_post', array( $this, 'get_pages_with_shortcodes' ), 10, 1 );
 		add_action( 'wp_trash_post', array( $this, 'maybe_delete_page_with_shortcodes' ), 10, 1 );
 	}
@@ -16,7 +17,7 @@ class CleanLogin_Shortcode{
     static function has_clean_login(){
         global $post;
 
-        $shortcodes = array( 'clean-login', 'clean-login-edit', 'clean-login-register', 'clean-login-restore' );
+        $shortcodes = array( 'clean-login', 'clean-login-edit', 'clean-login-register', 'clean-login-restore', 'clean-login-change-password' );
         foreach( $shortcodes as $shortcode ){
             if( is_a( $post, 'WP_Post' ) && has_shortcode( $post->post_content, $shortcode ) )
                 return true;
@@ -25,7 +26,7 @@ class CleanLogin_Shortcode{
         return false;
     }
 
-	function clean_login( $atts ) {
+	function clean_login() {
 		ob_start();
 		
 		if ( isset( $_GET['authentication'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -156,7 +157,7 @@ class CleanLogin_Shortcode{
 		return ob_get_clean();
 	}
 
-	function clean_login_restore( $atts ) {
+	function clean_login_restore() {
 		ob_start();
 	
 		if ( isset( $_GET['sent'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -184,6 +185,41 @@ class CleanLogin_Shortcode{
 		return ob_get_clean();
 	}
 
+	function clean_login_change_password() {
+		ob_start();
+
+		if ( isset( $_GET['updated'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$updated_result = sanitize_text_field( wp_unslash( $_GET['updated'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+			switch( $updated_result ){
+				case 'success':
+					echo "<div class='cleanlogin-notification success'><p>". esc_html__( 'Password changed successfully', 'clean-login' ) ."</p></div>";
+					break;
+
+				case 'wrongpass':
+					echo "<div class='cleanlogin-notification error'><p>". esc_html__( 'Passwords must be identical', 'clean-login' ) ."</p></div>";
+					break;
+
+				case 'passcomplex':
+					echo "<div class='cleanlogin-notification error'><p>". esc_html__( 'Passwords must be eight characters including one upper/lowercase letter, one special/symbol character and alphanumeric characters. Passwords should not contain the user\'s username, email, or first/last name.', 'clean-login' ) ."</p></div>";
+					break;
+
+				case 'failed':
+					echo "<div class='cleanlogin-notification error'><p>". esc_html__( 'Something strange has ocurred', 'clean-login' ) ."</p></div>";
+					break;
+			}
+		}
+
+		if ( is_user_logged_in() ) {
+			CleanLogin_Frontend::get_template_file( 'change-password.php' );
+		} else {
+			echo "<div class='cleanlogin-notification error'><p>". esc_html__( 'You need to be logged in to change your password', 'clean-login' ) ."</p></div>";
+			CleanLogin_Frontend::get_template_file( 'login-form.php' );
+		}
+
+		return ob_get_clean();
+	}
+
 	static function is_login_page(){
 		if( get_the_ID() == get_option( 'cl_login_id' ) )
 			return true;
@@ -194,7 +230,7 @@ class CleanLogin_Shortcode{
 		return false;
 	}
 
-	function get_pages_with_shortcodes( $post_id ) {
+	function get_pages_with_shortcodes( int $post_id ) {
 		if( 'trash' == get_post_status( $post_id ) )
 			return;
 
@@ -224,8 +260,13 @@ class CleanLogin_Shortcode{
 			update_option( 'cl_restore_id', $post->ID );
 		}
 
+		if( has_shortcode( $post->post_content, 'clean-login-change-password' ) ) {
+			update_option( 'cl_change_password_url', get_permalink( $post->ID ) );
+			update_option( 'cl_change_password_id', $post->ID );
+		}
+
 		// delete if not used
-		$keys = array( 'login' => 'clean-login', 'edit' => 'clean-login-edit', 'register' => 'clean-login-register', 'restore' => 'clean-login-restore' );
+		$keys = array( 'login' => 'clean-login', 'edit' => 'clean-login-edit', 'register' => 'clean-login-register', 'restore' => 'clean-login-restore', 'change_password' => 'clean-login-change-password' );
 		foreach ( $keys as $key => $shortcode ) {
 			if( $post_id == get_option( 'cl_' . $key . '_id' ) && !has_shortcode( $post->post_content, $shortcode ) ){
 				delete_option( 'cl_' . $key . '_url' );
@@ -234,7 +275,7 @@ class CleanLogin_Shortcode{
 		}
 	}
 	
-	function maybe_delete_page_with_shortcodes( $post_id ){
+	function maybe_delete_page_with_shortcodes( int $post_id ){
 		if( $post_id == get_option( 'cl_login_id' ) ){
 			delete_option( 'cl_login_url' );
 			delete_option( 'cl_login_id' );

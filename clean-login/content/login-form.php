@@ -53,8 +53,11 @@
 
 		<div class="cleanlogin-form-bottom">
 
-            <?php if ( $clean_login_restore_url != '' )
-				echo "<a href='" . esc_url( $clean_login_restore_url ) . "' class='cleanlogin-form-pwd-link'>" . esc_html__( 'Lost password?', 'clean-login' ) . "</a>";
+            <?php if ( $clean_login_restore_url != '' ) :
+				$clean_login_lost_pwd_text = get_option( 'cl_lost_password_text', '' );
+				$clean_login_lost_pwd_label = !empty( $clean_login_lost_pwd_text ) ? $clean_login_lost_pwd_text : __( 'Lost password?', 'clean-login' );
+				echo "<a href='" . esc_url( $clean_login_restore_url ) . "' class='cleanlogin-form-pwd-link'>" . esc_html( $clean_login_lost_pwd_label ) . "</a>";
+			endif;
 			?>
 
 			<?php if ( $clean_login_register_url != '' && get_option( 'users_can_register' ) )

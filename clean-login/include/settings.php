@@ -83,6 +83,7 @@ class CleanLogin_Settings
         $edit_url = get_option('cl_edit_url');
         $register_url = get_option('cl_register_url');
         $restore_url = get_option('cl_restore_url');
+        $change_password_url = get_option('cl_change_password_url');
     ?>
         <h2><?php echo esc_html__('Clean Login status', 'clean-login'); ?></h2>
 
@@ -127,6 +128,15 @@ class CleanLogin_Settings
                         <td class="desc"><?php /* translators: %s: page URL */ printf( wp_kses_post( __( 'Used <a href="%s">here</a>', 'clean-login' ) ), esc_url( $restore_url ) ); ?></td>
                     <?php endif; ?>
                     <td class="desc"><?php echo esc_html__('This shortcode contains the restore (lost password?) form. If you include in a page/post a link will appear on your login form.', 'clean-login'); ?></td>
+                </tr>
+                <tr class="alternate">
+                    <td class="import-system row-title"><a>[clean-login-change-password]</a></td>
+                    <?php if (!$change_password_url) : ?>
+                        <td class="desc"><?php echo esc_html__('Currently not used', 'clean-login'); ?></td>
+                    <?php else : ?>
+                        <td class="desc"><?php /* translators: %s: page URL */ printf( wp_kses_post( __( 'Used <a href="%s">here</a>', 'clean-login' ) ), esc_url( $change_password_url ) ); ?></td>
+                    <?php endif; ?>
+                    <td class="desc"><?php echo esc_html__('This shortcode shows a dedicated password change form (new password + confirm). Ideal as the destination after a password reset link. Includes a password strength meter.', 'clean-login'); ?></td>
                 </tr>
             </tbody>
         </table>
@@ -173,6 +183,7 @@ class CleanLogin_Settings
         update_option( 'cl_logout_redirect_url', isset( $post['logoutredirect'] ) && isset( $post['logoutredirect_url'] ) ? esc_url_raw( $post['logoutredirect_url'] ) : home_url() );
         update_option( 'cl_register_redirect', isset( $post['registerredirect'] ) );
         update_option( 'cl_register_redirect_url', isset( $post['registerredirect'] ) && isset( $post['registerredirect_url'] ) ? esc_url_raw( $post['registerredirect_url'] ) : home_url() );
+        update_option( 'cl_lost_password_text', isset( $post['lost_password_text'] ) ? sanitize_text_field( $post['lost_password_text'] ) : '' );
 
         echo '<div class="updated"><p><strong>' . esc_html__( 'Settings saved.', 'clean-login' ) . '</strong></p></div>';
     }
@@ -222,6 +233,7 @@ class CleanLogin_Settings
             $logoutredirect_url = get_option('cl_logout_redirect_url', false) ? esc_url(get_option('cl_logout_redirect_url')) : home_url();
             $registerredirect = get_option('cl_register_redirect', false) ? true : false;
             $registerredirect_url = get_option('cl_register_redirect_url', false) ? esc_url(get_option('cl_register_redirect_url')) : home_url();
+            $lost_password_text = get_option('cl_lost_password_text', '');
             ?>
             <form id="form1" name="form1" method="post" action="">
                 <table class="form-table">
@@ -347,6 +359,13 @@ class CleanLogin_Settings
                             <th scope="row"><?php echo esc_html__('Login', 'clean-login'); ?></th>
                             <td>
                                 <label><input name="enable_hash_in_login_page" type="checkbox" id="enable_hash_in_login_page" <?php checked($enable_hash_in_login_page); ?>><?php echo esc_html__('Enable timestamp GET parameter in login page to avoid problems with page cache', 'clean-login'); ?></label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><?php echo esc_html__('Lost password link text', 'clean-login'); ?></th>
+                            <td>
+                                <input name="lost_password_text" type="text" id="lost_password_text" value="<?php echo esc_attr( $lost_password_text ); ?>" placeholder="<?php echo esc_attr__( 'Lost password?', 'clean-login' ); ?>" class="regular-text">
+                                <p class="description"><?php echo esc_html__('Custom label for the "Lost password?" link on the login form. Leave blank to use the default.', 'clean-login'); ?></p>
                             </td>
                         </tr>
                         <tr>

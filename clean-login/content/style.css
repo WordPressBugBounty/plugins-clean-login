@@ -275,3 +275,35 @@ to your current WordPress template, and if something behaves abnormal please con
 	float: left;
 	text-decoration: none;
 }
+
+/* Password strength meter */
+#cleanlogin-strength-meter {
+	margin-top: 8px;
+}
+
+.cleanlogin-strength-bar {
+	height: 5px;
+	background-color: #e0e0e0;
+	border-radius: 3px;
+	overflow: hidden;
+}
+
+.cleanlogin-strength-fill {
+	display: block;
+	height: 100%;
+	width: 0;
+	border-radius: 3px;
+	transition: width 0.25s ease, background-color 0.25s ease;
+}
+
+.cleanlogin-strength-fill.strength-1 { width: 25%; background-color: #e74c3c; }
+.cleanlogin-strength-fill.strength-2 { width: 50%; background-color: #e67e22; }
+.cleanlogin-strength-fill.strength-3 { width: 75%; background-color: #f1c40f; }
+.cleanlogin-strength-fill.strength-4 { width: 100%; background-color: #27ae60; }
+
+.cleanlogin-strength-label {
+	font-size: 12px;
+	margin: 4px 0 0;
+	min-height: 16px;
+	color: inherit;
+}

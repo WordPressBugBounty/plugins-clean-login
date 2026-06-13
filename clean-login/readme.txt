@@ -1,58 +1,57 @@
 === Clean Login ===
 Contributors: hornero, carazo
 Donate link: https://codection.com/?post_type=surl&p=8712&preview=true
-Tags: form, login, registration, editor, lost password
-Requires at least: 3.4
+Tags: login, registration, custom login page, password reset, user profile
+Requires at least: 5.5
 Tested up to: 6.9
-Stable tag: 1.16.1
+Stable tag: 1.17
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-A plugin for displaying useful forms in front-end only using shortcodes. Login, Registration, Profile Editor and Lost Password forms
+Custom frontend login, registration, user profile and password reset forms via shortcodes — no coding required. WPML certified, reCAPTCHA and WooCommerce compatible.
 
 == Description ==
 
 **Try it out on your free dummy site: Click here => [https://demo.tastewp.com/clean-login](https://demo.tastewp.com/clean-login)**
 
+**Clean Login** lets you replace the default WordPress login and registration pages with fully customised **frontend forms** — no coding required. Place any form anywhere on your site using a simple shortcode.
 
-Responsive Frontend Login and Registration plugin. A plugin for displaying login, register, editor and restore password forms through shortcodes.
+Whether you need a **custom login page**, a **user registration form**, a **password reset page** or an **editable user profile**, Clean Login has you covered with one shortcode per form:
 
-*   _[clean-login]_
-*   _[clean-login-edit]_
-*   _[clean-login-register]_
-*   _[clean-login-restore]_
+*   `[clean-login]` — Custom login form with show/hide password toggle
+*   `[clean-login-register]` — User registration form with CAPTCHA, reCAPTCHA and email validation
+*   `[clean-login-edit]` — Frontend user profile editor (name, email, password)
+*   `[clean-login-restore]` — Forgot password / password reset form
+*   `[clean-login-change-password]` — Dedicated password change form with visual strength meter
 
-### Basics
+### Why choose Clean Login?
 
-*   Add your login form in the frontend easily (page or post)
-*   And also the registration and the lost password form
-*   If user is logged in, the user will see a custom profile and will be able to edit his/her data in another front-end form
-*   One shortcode per form, you only need to create a page or post and apply this shortcode to create each form you want
+*   **No coding** — drop a shortcode into any page or post and the form appears instantly
+*   **Fully responsive** — forms adapt to any screen size and integrate with your theme's CSS
+*   **SEO friendly** — login and registration pages are automatically marked as `noindex` and excluded from sitemaps, keeping your site's SEO clean
+*   **Secure** — nonce verification on every form, honeypot antispam, CAPTCHA and Google reCAPTCHA support
+*   **Password strength meter** — visual indicator guides users to create stronger passwords
+*   **WPML certified** — [official WPML compatibility](http://wpml.org/plugin/clean-login/) for multilingual sites
+*   **WooCommerce compatible** — works alongside WooCommerce without conflicts
 
-### Style
+### Features
 
-*   Every form created is responsive
-*   CSS adapted to each theme
-
-### Spam protection
-
-*   Register form protected with CAPTCHA and  Google reCaptcha (as an option)
-*   Forms are also protected by Honeypot antispam protection
-
-### Internacionalization
-
-*   WMPL ready with [oficial certification](http://wpml.org/plugin/clean-login/)
-*   .po/.mo template included
-*	Many languages included by default
-
-### More features
-
-*   Auto status checker
-*   Hide admin bar for non-admin users as an option
-*   Disable dashboard access as an option
-*   Standby user role for new user registration. With no capabilities, to allow admin approval of users optionally
-*   Auto linked forms, if you place a shortcode in a page/post the link between them will be automatically generated
-*   And yes, this is WordPress 4.6 ready! Also compatible with WooCommerce.
+*   Custom login page with redirect after login and logout
+*   Frontend user registration with optional email verification
+*   Forgot password / password reset via email link
+*   Dedicated change-password form with animated strength meter (Weak / Fair / Good / Strong)
+*   Frontend user profile editor — update name, email and password without visiting wp-admin
+*   Hide admin bar for selected roles
+*   Block dashboard access for non-admin users
+*   Standby role for new registrations — users stay inactive until an admin approves them
+*   Role selection at registration — let users choose their own role from a curated list
+*   Terms and conditions checkbox on registration form
+*   Use email address as username
+*   Automatic login after registration
+*   Customisable "Lost password?" link text from the settings panel
+*   Auto-linked forms — shortcodes detect each other and generate links automatically
+*   Override any template from your theme (`theme/clean-login/` folder)
+*   AJAX compatible
 
 == Usage and Settings ==
 
@@ -60,20 +59,43 @@ Please, refer to [Installation section](https://wordpress.org/plugins/clean-logi
 
 == Screenshots ==
 
-1. Login form
-2. Preview user
-3. Editor form
-4. Lost password form
-5. Register form with CAPTCHA and Google reCaptcha
-6. Setting access from the dashboard
-7. Setting page from the dashboard
-8. Settings menu
-9. Plugin status
-10. Options section
-11. Settings updated
-12. WPML. Certificate of Compatibility
+1. Custom login form (frontend)
+2. Logged-in user preview with profile links
+3. Frontend user profile editor
+4. Forgot password / password reset form
+5. Registration form with CAPTCHA and Google reCAPTCHA
+6. Change password form with visual password strength meter
+7. Settings access from the WordPress dashboard
+8. Plugin settings page
+9. Settings menu
+10. Plugin status — shows which shortcodes are active and on which pages
+11. Options section
+12. Settings saved confirmation
+13. WPML Certificate of Compatibility
 
 == Changelog ==
+
+= 1.17 =
+*   New: shortcode `[clean-login-change-password]` — dedicated password change form, ideal as the destination after a password reset link
+*   New: password strength meter in `[clean-login-change-password]` with four animated levels (Weak / Fair / Good / Strong), fully translatable
+*   New: customisable "Lost password?" link text via Settings → Clean Login
+*   Fixed: error message not showing after failed login — redirect now uses the configured login page URL directly instead of relying on the HTTP referer
+*   SEO: login and registration pages automatically marked `noindex, nofollow` (compatible with Yoast SEO, RankMath and AIOSEO)
+*   SEO: canonical URL tag added to prevent duplicate content from query parameters
+*   SEO: plugin pages excluded from the WordPress native sitemap (WordPress 5.5+)
+*   Code: missing `exit()` added after `wp_safe_redirect()` in the login handler, as required by WordPress
+*   Code: unused `$atts` parameter removed from shortcode callbacks that accept no attributes
+
+= 1.16.3 =
+*   SEO: login, register, restore and change-password pages are now automatically marked as `noindex, nofollow` — compatible with WordPress native robots API, Yoast SEO and RankMath
+*   SEO: canonical URL tag added on plugin pages to prevent duplicate content caused by query parameters (`?authentication=failed`, `?nocache_login=...`, etc.). Skipped automatically when Yoast, RankMath or AIOSEO are active
+*   SEO: plugin pages excluded from the WordPress native sitemap (WordPress 5.5+)
+
+= 1.16.2 =
+*   Fixed: wrong-credentials error message not showing after a failed login. The redirect URL now uses the configured login page directly instead of relying on the HTTP referer, which could be absent or blocked. Added missing `exit()` after `wp_safe_redirect()` in the login handler, as required by WordPress
+*   New: customizable "Lost password?" link text via Settings → Clean Login → Lost password link text
+*   New: shortcode `[clean-login-change-password]` — dedicated form for changing password, ideal as destination after a password reset link. Shows only the two password fields without exposing name or email
+*   New: password strength meter in `[clean-login-change-password]` — animated bar with four levels (Weak / Fair / Good / Strong), fully translatable via .po/.mo files
 
 = 1.16.1 =
 *   Documentation updated with upgrade notes for breaking changes introduced in 1.16
@@ -553,10 +575,47 @@ Please, refer to [Installation section](https://wordpress.org/plugins/clean-logi
 
 == Frequently Asked Questions ==
 
-*   Can I use my email in addition to your username for login? Yes, through [WP Email Login](https://wordpress.org/plugins/wp-email-login/).
-*   Can I modify my Avatar? Clean Login uses your email to get your Avatar from the Gravatar service (from Automattic), but if you want to modify from the WordPress dashboard you can use [WP User Avatar](https://wordpress.org/plugins/wp-user-avatar/).
-*   Is Clean Login compatible with AJAX-based plugins/themes/queries? Yes, from the version 1.2.6.
-*   Can I change the sender name from Wordpress to my domain name? Yes, through [WP Simple Mail Sender](https://wordpress.org/plugins/wp-simple-mail-sender/).
+= How do I create a custom login page? =
+Install Clean Login, create a new page, and add the shortcode `[clean-login]` to its content. Save the page — that's it. Your custom frontend login form is live.
+
+= Can I create a custom user registration page? =
+Yes. Create a page with the shortcode `[clean-login-register]`. Make sure user registration is enabled in WordPress Settings → General → Membership.
+
+= How does the password reset / forgot password page work? =
+Add `[clean-login-restore]` to a page. Users enter their username or email and receive a reset link. If you also have a `[clean-login-change-password]` page set up, they will be redirected there to set their own password; otherwise a new password is generated and emailed to them.
+
+= Can users change their password from the frontend? =
+Yes — use `[clean-login-change-password]` for a focused password change form, or `[clean-login-edit]` for a full profile editor that also includes name, email and password fields.
+
+= Is there a password strength indicator? =
+Yes. The `[clean-login-change-password]` form includes an animated strength meter with four levels (Weak, Fair, Good, Strong).
+
+= Can I redirect users to a specific page after login? =
+Yes. Go to Settings → Clean Login and enable "Redirect after log in", then enter the destination URL.
+
+= Can users log in with their email address instead of username? =
+Yes. Enable "Use Email as Username" in the plugin settings.
+
+= Is Clean Login SEO friendly? =
+Yes. Login, registration and all other plugin pages are automatically marked `noindex, nofollow` and excluded from the WordPress sitemap, so they never pollute your site's search rankings. Compatible with Yoast SEO, RankMath and AIOSEO.
+
+= Is Clean Login compatible with WPML? =
+Yes — Clean Login holds an [official WPML certification](http://wpml.org/plugin/clean-login/).
+
+= Is Clean Login compatible with WooCommerce? =
+Yes, Clean Login works alongside WooCommerce without conflicts.
+
+= Is Clean Login compatible with AJAX-based plugins and themes? =
+Yes, from version 1.2.6.
+
+= Can I override the form templates? =
+Yes. Copy any template from the plugin's `content/` folder into `your-theme/clean-login/` and edit it there. Your customisations will survive plugin updates.
+
+= Can I modify my Avatar? =
+Clean Login uses your email address to fetch your avatar from Gravatar. To manage avatars from the WordPress dashboard, use [WP User Avatar](https://wordpress.org/plugins/wp-user-avatar/).
+
+= Can I change the "Lost password?" link text? =
+Yes. Go to Settings → Clean Login → "Lost password link text" and enter your preferred label.
 
 == Installation ==
 
@@ -581,6 +640,7 @@ Below, the description of each shortcode for use as registration, login, lost pa
 *   _[clean-login-edit]_ This shortcode contains the profile editor. If you include in a page/post a link will appear on your login preview.
 *   _[clean-login-register]_ This shortcode contains the register form. If you include in a page/post a link will appear on your login form.
 *   _[clean-login-restore]_ This shortcode contains the restore (lost password?) form. If you include in a page/post a link will appear on your login form.
+*   _[clean-login-change-password]_ Dedicated password change form with a visual strength meter. Ideal as the destination after a password reset link.
 
 Also, in the Clean Login settings page you can check the plugin status as follows:
 
