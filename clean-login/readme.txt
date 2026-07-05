@@ -4,7 +4,7 @@ Donate link: https://codection.com/?post_type=surl&p=8712&preview=true
 Tags: login, registration, custom login page, password reset, user profile
 Requires at least: 5.5
 Tested up to: 6.9
-Stable tag: 1.17
+Stable tag: 1.18
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -23,6 +23,7 @@ Whether you need a **custom login page**, a **user registration form**, a **pass
 *   `[clean-login-edit]` — Frontend user profile editor (name, email, password)
 *   `[clean-login-restore]` — Forgot password / password reset form
 *   `[clean-login-change-password]` — Dedicated password change form with visual strength meter
+*   `[clean-login-logout]` — Standalone logout link, usable anywhere on your site
 
 ### Why choose Clean Login?
 
@@ -74,6 +75,9 @@ Please, refer to [Installation section](https://wordpress.org/plugins/clean-logi
 13. WPML Certificate of Compatibility
 
 == Changelog ==
+
+= 1.18 =
+*   New: shortcode `[clean-login-logout]` — standalone logout link, usable anywhere on the site. Renders only for logged-in users and accepts an optional `text` attribute to customise the label
 
 = 1.17 =
 *   New: shortcode `[clean-login-change-password]` — dedicated password change form, ideal as the destination after a password reset link
@@ -617,6 +621,9 @@ Clean Login uses your email address to fetch your avatar from Gravatar. To manag
 = Can I change the "Lost password?" link text? =
 Yes. Go to Settings → Clean Login → "Lost password link text" and enter your preferred label.
 
+= How do I add a logout link outside of the login preview? =
+Use the shortcode `[clean-login-logout]` anywhere on your site. It only renders for logged-in users and accepts an optional `text` attribute to customise the link label, e.g. `[clean-login-logout text="Sign out"]`.
+
 == Installation ==
 
 ### Installation
@@ -641,6 +648,7 @@ Below, the description of each shortcode for use as registration, login, lost pa
 *   _[clean-login-register]_ This shortcode contains the register form. If you include in a page/post a link will appear on your login form.
 *   _[clean-login-restore]_ This shortcode contains the restore (lost password?) form. If you include in a page/post a link will appear on your login form.
 *   _[clean-login-change-password]_ Dedicated password change form with a visual strength meter. Ideal as the destination after a password reset link.
+*   _[clean-login-logout]_ Standalone logout link. Renders only for logged-in users; accepts an optional `text` attribute to customise the label.
 
 Also, in the Clean Login settings page you can check the plugin status as follows:
 

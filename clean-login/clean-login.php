@@ -2,19 +2,20 @@
 /*
 Plugin Name: Clean Login
 Plugin URI: https://codection.com
-Description: Responsive Frontend Login and Registration plugin. A plugin for displaying login, register, editor and restore password forms through shortcodes. [clean-login] [clean-login-edit] [clean-login-register] [clean-login-restore] [clean-login-change-password]
+Description: Responsive Frontend Login and Registration plugin. A plugin for displaying login, register, editor and restore password forms through shortcodes. [clean-login] [clean-login-edit] [clean-login-register] [clean-login-restore] [clean-login-change-password] [clean-login-logout]
 Author: codection
-Version: 1.17
+Version: 1.18
 Author URI: https://codection.com
 Text Domain: clean-login
 Domain Path: /lang
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 */
+
 if ( ! defined( 'ABSPATH' ) ) 
 	exit; 
 
-define( "CLEAN_LOGIN_VERSION", "1.17" );
+define( "CLEAN_LOGIN_VERSION", "1.18" );
 define( "CLEAN_LOGIN_PATH", plugin_dir_path( __FILE__ ) );
 define( "CLEAN_LOGIN_URL", plugin_dir_url( __FILE__ ) );
 define( "CLEAN_LOGIN_CAPTCHA_URL", plugins_url( 'content/captcha', __FILE__ ) );

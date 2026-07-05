@@ -9,6 +9,7 @@ class CleanLogin_Shortcode{
 		add_shortcode( 'clean-login-register', array( $this, 'clean_login_register' ) );
 		add_shortcode( 'clean-login-restore', array( $this, 'clean_login_restore' ) );
 		add_shortcode( 'clean-login-change-password', array( $this, 'clean_login_change_password' ) );
+		add_shortcode( 'clean-login-logout', array( $this, 'clean_login_logout' ) );
 
 		add_action( 'save_post', array( $this, 'get_pages_with_shortcodes' ), 10, 1 );
 		add_action( 'wp_trash_post', array( $this, 'maybe_delete_page_with_shortcodes' ), 10, 1 );
@@ -17,7 +18,7 @@ class CleanLogin_Shortcode{
     static function has_clean_login(){
         global $post;
 
-        $shortcodes = array( 'clean-login', 'clean-login-edit', 'clean-login-register', 'clean-login-restore', 'clean-login-change-password' );
+        $shortcodes = array( 'clean-login', 'clean-login-edit', 'clean-login-register', 'clean-login-restore', 'clean-login-change-password', 'clean-login-logout' );
         foreach( $shortcodes as $shortcode ){
             if( is_a( $post, 'WP_Post' ) && has_shortcode( $post->post_content, $shortcode ) )
                 return true;
@@ -218,6 +219,23 @@ class CleanLogin_Shortcode{
 		}
 
 		return ob_get_clean();
+	}
+
+	function clean_login_logout( $atts ) {
+		if ( ! is_user_logged_in() )
+			return '';
+
+		$atts = shortcode_atts( array(
+			'text' => __( 'Logout', 'clean-login' ),
+		), $atts );
+
+		$login_url = CleanLogin_Controller::get_login_url();
+		if ( $login_url == '' )
+			return '';
+
+		$logout_url = add_query_arg( 'action', 'logout', $login_url );
+
+		return "<a href='" . esc_url( $logout_url ) . "' class='cleanlogin-logout-link'>" . esc_html( $atts['text'] ) . "</a>";
 	}
 
 	static function is_login_page(){
