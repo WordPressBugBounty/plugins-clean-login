@@ -160,7 +160,7 @@ class CleanLogin_Controller{
 
         // REGISTER a new user
         } else if ( $cleanlogin_action == 'register' ) {
-            if ( ! $cleanlogin_has_verified_nonce ) {
+            if ( ! $cleanlogin_has_verified_nonce || ! get_option( 'users_can_register' ) ) {
                 wp_safe_redirect( esc_url( add_query_arg( 'created', 'failed', $url ) ) );
                 exit();
             }
@@ -227,7 +227,7 @@ class CleanLogin_Controller{
                 $url = esc_url( add_query_arg( 'created', 'passcomplex', $url ) );
             else if ( $create_customrole && !in_array( $role, $newuserroles ) )
                 $url = esc_url( add_query_arg( 'created', 'failed', $url ) );
-            else if( ( $enable_captcha && $captcha != $captcha_session ) || ( $enable_gcaptcha && !$this->valid_gcaptcha() ) )
+            else if( ( $enable_captcha && ( $captcha_session === '' || ! hash_equals( $captcha_session, $captcha ) ) ) || ( $enable_gcaptcha && !$this->valid_gcaptcha() ) )
                 $url = esc_url( add_query_arg( 'created', 'wrongcaptcha', $url ) );
             else if( $website != '.' )
                 $url = esc_url( add_query_arg( 'created', 'created', $url ) );

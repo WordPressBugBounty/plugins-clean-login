@@ -4,7 +4,7 @@ Donate link: https://codection.com/?post_type=surl&p=8712&preview=true
 Tags: login, registration, custom login page, password reset, user profile
 Requires at least: 5.5
 Tested up to: 6.9
-Stable tag: 1.18
+Stable tag: 1.19
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -75,6 +75,10 @@ Please, refer to [Installation section](https://wordpress.org/plugins/clean-logi
 13. WPML Certificate of Compatibility
 
 == Changelog ==
+
+= 1.19 =
+*   Security: registration handler now enforces WordPress's "Anyone can register" setting server-side, closing a bug that let an unauthenticated visitor create an account even while registration was disabled (reported by Artus KG)
+*   Security: registration CAPTCHA can no longer be bypassed by submitting the form without loading the CAPTCHA image (reported by Arthur Morgan)
 
 = 1.18 =
 *   New: shortcode `[clean-login-logout]` — standalone logout link, usable anywhere on the site. Renders only for logged-in users and accepts an optional `text` attribute to customise the label
