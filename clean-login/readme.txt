@@ -4,7 +4,7 @@ Donate link: https://codection.com/?post_type=surl&p=8712&preview=true
 Tags: login, registration, custom login page, password reset, user profile
 Requires at least: 5.5
 Tested up to: 6.9
-Stable tag: 1.19
+Stable tag: 1.20
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -75,6 +75,10 @@ Please, refer to [Installation section](https://wordpress.org/plugins/clean-logi
 13. WPML Certificate of Compatibility
 
 == Changelog ==
+
+= 1.20 =
+*   New: Google reCAPTCHA diagnostics in Settings → Clean Login — automatic checks (keys, theme template overrides without the reCAPTCHA box, cache/optimisation and cookie consent plugins that can block the Google script), a live test of the Site Key and Secret Key against Google, and an optional log of failed validations with the reason returned by Google
+*   Improved: reCAPTCHA answers are now verified with a POST request to Google and connection errors no longer trigger PHP warnings
 
 = 1.19 =
 *   Security: registration handler now enforces WordPress's "Anyone can register" setting server-side, closing a bug that let an unauthenticated visitor create an account even while registration was disabled (reported by Artus KG)

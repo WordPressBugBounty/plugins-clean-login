@@ -227,7 +227,7 @@ class CleanLogin_Controller{
                 $url = esc_url( add_query_arg( 'created', 'passcomplex', $url ) );
             else if ( $create_customrole && !in_array( $role, $newuserroles ) )
                 $url = esc_url( add_query_arg( 'created', 'failed', $url ) );
-            else if( ( $enable_captcha && ( $captcha_session === '' || ! hash_equals( $captcha_session, $captcha ) ) ) || ( $enable_gcaptcha && !$this->valid_gcaptcha() ) )
+            else if( ( $enable_captcha && ( $captcha_session === '' || ! hash_equals( $captcha_session, $captcha ) ) ) || ( $enable_gcaptcha && !$this->valid_gcaptcha( 'register' ) ) )
                 $url = esc_url( add_query_arg( 'created', 'wrongcaptcha', $url ) );
             else if( $website != '.' )
                 $url = esc_url( add_query_arg( 'created', 'created', $url ) );
@@ -497,19 +497,67 @@ class CleanLogin_Controller{
         $ = end of the string */
     }
 
-    function valid_gcaptcha() {
+    function valid_gcaptcha( $context = 'login' ) {
         $gcaptcha_par = isset( $_POST['g-recaptcha-response'] ) ? sanitize_text_field( wp_unslash( $_POST['g-recaptcha-response'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
         $remote_ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
-        $secret_key_gcaptcha = get_option( 'cl_gcaptcha_secretkey' );
-      
-        if ($gcaptcha_par != '') {
-          $request_gcaptcha = wp_remote_get( 'https://www.google.com/recaptcha/api/siteverify?secret=' . $secret_key_gcaptcha . '&response=' . $gcaptcha_par . '&remoteip=' . $remote_ip );
-          $response_body_gcaptcha = wp_remote_retrieve_body( $request_gcaptcha );
-          $result_gcaptcha = json_decode( $response_body_gcaptcha, true );
-          return $result_gcaptcha['success'];
+
+        $result = self::verify_gcaptcha_token( $gcaptcha_par, get_option( 'cl_gcaptcha_secretkey' ), $remote_ip );
+
+        if ( ! $result['success'] )
+            self::log_gcaptcha_failure( $context, $result );
+
+        return $result['success'];
+    }
+
+    static function verify_gcaptcha_token( $token, $secret, $remote_ip = '' ) {
+        $result = array( 'success' => false, 'error_codes' => array(), 'hostname' => '', 'http_error' => '' );
+
+        if ( $token === '' ) {
+            $result['error_codes'] = array( 'missing-input-response' );
+            return $result;
         }
 
-        return false;
+        $response = wp_remote_post( 'https://www.google.com/recaptcha/api/siteverify', array(
+            'timeout' => 10,
+            'body'    => array( 'secret' => $secret, 'response' => $token, 'remoteip' => $remote_ip ),
+        ) );
+
+        if ( is_wp_error( $response ) ) {
+            $result['http_error'] = $response->get_error_message();
+            return $result;
+        }
+
+        $body = json_decode( wp_remote_retrieve_body( $response ), true );
+
+        if ( ! is_array( $body ) ) {
+            $result['http_error'] = 'HTTP ' . wp_remote_retrieve_response_code( $response );
+            return $result;
+        }
+
+        $result['success'] = ! empty( $body['success'] );
+        $result['error_codes'] = isset( $body['error-codes'] ) ? array_map( 'sanitize_text_field', (array) $body['error-codes'] ) : array();
+        $result['hostname'] = isset( $body['hostname'] ) ? sanitize_text_field( $body['hostname'] ) : '';
+
+        return $result;
+    }
+
+    static function log_gcaptcha_failure( $context, $result ) {
+        if ( ! get_option( 'cl_gcaptcha_debug' ) )
+            return;
+
+        $log = get_option( 'cl_gcaptcha_log', array() );
+        $log = is_array( $log ) ? $log : array();
+
+        array_unshift( $log, array(
+            'time'        => time(),
+            'context'     => $context,
+            'error_codes' => $result['error_codes'],
+            'hostname'    => $result['hostname'],
+            'http_error'  => $result['http_error'],
+            'user_agent'  => isset( $_SERVER['HTTP_USER_AGENT'] ) ? substr( sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ), 0, 200 ) : '',
+        ) );
+
+        update_option( 'cl_gcaptcha_log', array_slice( $log, 0, 20 ), false );
     }
 
     static function get_translated_option_page( $page, $param = false) {

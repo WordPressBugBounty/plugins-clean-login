@@ -100,5 +100,12 @@ jQuery(document).ready(function($) {
         $('#like-donate-smile').toggle();
     });
 
+    if ($('#cl-gcaptcha-test-box').length) {
+        setTimeout(function() {
+            if (typeof grecaptcha === 'undefined' || !$('#cl-gcaptcha-test-box iframe').length)
+                $('#cl-gcaptcha-test-noscript').removeClass('hidden');
+        }, 6000);
+    }
+
     displayInitCheck();
 });

@@ -10,14 +10,290 @@ class CleanLogin_Settings
         add_action('admin_init', array($this, 'maybe_block_dashboard_access'), 1);
         add_action('admin_menu', array($this, 'menu'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue'));
+        add_action('admin_post_clean_login_gcaptcha_test', array($this, 'gcaptcha_test'));
+        add_action('admin_post_clean_login_gcaptcha_log', array($this, 'gcaptcha_log_action'));
     }
 
     function enqueue( string $hook ) {
         if( $hook !== 'settings_page_clean_login_menu' )
             return;
         $newuserroles = get_option( 'cl_newuserroles' );
-        wp_enqueue_script( 'clean-login-admin', plugin_dir_url( dirname( __FILE__ ) ) . 'content/js/clean-login-admin.js', array( 'jquery' ), '1.16', true );
+        wp_enqueue_script( 'clean-login-admin', plugin_dir_url( dirname( __FILE__ ) ) . 'content/js/clean-login-admin.js', array( 'jquery' ), filemtime( CLEAN_LOGIN_PATH . 'content/js/clean-login-admin.js' ), true );
         wp_localize_script( 'clean-login-admin', 'cleanLoginAdmin', array( 'newuserroles' => $newuserroles ? $newuserroles : array() ) );
+
+        if( get_option( 'cl_gcaptcha' ) && get_option( 'cl_gcaptcha_sitekey' ) )
+            CleanLogin_Frontend::gcaptcha_script();
+    }
+
+    function check_gcaptcha_admin_request( $nonce_action ) {
+        if ( ! current_user_can( apply_filters( 'clean_login_admin_capability', 'manage_options' ) ) )
+            wp_die( esc_html__( 'Admin area', 'clean-login' ) );
+
+        check_admin_referer( $nonce_action );
+    }
+
+    function redirect_to_gcaptcha_diagnostics() {
+        wp_safe_redirect( admin_url( 'options-general.php?page=clean_login_menu#cl-gcaptcha-diagnostics' ) );
+        exit;
+    }
+
+    function gcaptcha_test() {
+        $this->check_gcaptcha_admin_request( 'clean_login_gcaptcha_test' );
+
+        $token = isset( $_POST['g-recaptcha-response'] ) ? sanitize_text_field( wp_unslash( $_POST['g-recaptcha-response'] ) ) : '';
+        $secret = get_option( 'cl_gcaptcha_secretkey' );
+
+        if ( $token === '' ) {
+            $result = CleanLogin_Controller::verify_gcaptcha_token( 'clean-login-secret-check', $secret );
+            $result['secret_only'] = true;
+        } else {
+            $result = CleanLogin_Controller::verify_gcaptcha_token( $token, $secret );
+            $result['secret_only'] = false;
+        }
+
+        set_transient( 'cl_gcaptcha_test_' . get_current_user_id(), $result, 5 * MINUTE_IN_SECONDS );
+
+        $this->redirect_to_gcaptcha_diagnostics();
+    }
+
+    function gcaptcha_log_action() {
+        $this->check_gcaptcha_admin_request( 'clean_login_gcaptcha_log' );
+
+        $do = isset( $_POST['do'] ) ? sanitize_key( wp_unslash( $_POST['do'] ) ) : '';
+
+        if ( $do === 'enable' )
+            update_option( 'cl_gcaptcha_debug', true );
+        elseif ( $do === 'disable' )
+            update_option( 'cl_gcaptcha_debug', false );
+        elseif ( $do === 'clear' )
+            delete_option( 'cl_gcaptcha_log' );
+
+        $this->redirect_to_gcaptcha_diagnostics();
+    }
+
+    function describe_gcaptcha_error( $code ) {
+        $messages = array(
+            'missing-input-response' => __( 'No reCAPTCHA answer was received. The box did not load on the form (script blocked or delayed by a cache/optimisation or cookie plugin, or a theme template without the box) or the user did not tick it.', 'clean-login' ),
+            'invalid-input-response' => __( 'The answer is invalid or expired, or the Site Key and the Secret Key do not belong to the same reCAPTCHA key.', 'clean-login' ),
+            'missing-input-secret'   => __( 'The Secret Key is empty.', 'clean-login' ),
+            'invalid-input-secret'   => __( 'The Secret Key is invalid or malformed.', 'clean-login' ),
+            'timeout-or-duplicate'   => __( 'The answer expired (more than two minutes old) or was already used.', 'clean-login' ),
+            'bad-request'            => __( 'Google rejected the request as malformed.', 'clean-login' ),
+        );
+
+        return isset( $messages[ $code ] ) ? $messages[ $code ] : $code;
+    }
+
+    function describe_gcaptcha_result( $result ) {
+        if ( ! empty( $result['http_error'] ) ) {
+            /* translators: %s: connection error message */
+            return array( sprintf( __( 'WordPress could not connect to Google (%s). The server may be blocking outgoing connections to www.google.com.', 'clean-login' ), $result['http_error'] ) );
+        }
+
+        if ( empty( $result['error_codes'] ) )
+            return array( __( 'Google answered without an error code.', 'clean-login' ) );
+
+        return array_map( array( $this, 'describe_gcaptcha_error' ), $result['error_codes'] );
+    }
+
+    function get_gcaptcha_conflicting_plugins() {
+        $slugs = array(
+            'wp-rocket', 'litespeed-cache', 'autoptimize', 'perfmatters', 'w3-total-cache', 'wp-optimize', 'sg-cachepress',
+            'flying-scripts', 'nitropack', 'wp-fastest-cache', 'hummingbird-performance', 'async-javascript', 'swift-performance-lite',
+            'complianz-gdpr', 'complianz-gdpr-premium', 'cookie-law-info', 'cookiebot', 'cookie-notice', 'gdpr-cookie-compliance',
+            'iubenda-cookie-law-solution', 'real-cookie-banner', 'borlabs-cookie', 'termly', 'uk-cookie-consent',
+        );
+
+        if ( ! function_exists( 'get_plugins' ) )
+            require_once ABSPATH . 'wp-admin/includes/plugin.php';
+
+        $active = (array) get_option( 'active_plugins', array() );
+        if ( is_multisite() )
+            $active = array_merge( $active, array_keys( (array) get_site_option( 'active_sitewide_plugins', array() ) ) );
+
+        $all = get_plugins();
+        $found = array();
+
+        foreach ( $active as $file ) {
+            if ( in_array( dirname( $file ), $slugs, true ) )
+                $found[] = isset( $all[ $file ]['Name'] ) ? $all[ $file ]['Name'] : dirname( $file );
+        }
+
+        return array_unique( $found );
+    }
+
+    function get_gcaptcha_checks() {
+        $checks = array();
+
+        $sitekey = get_option( 'cl_gcaptcha_sitekey' );
+        $secretkey = get_option( 'cl_gcaptcha_secretkey' );
+        $checks[] = array(
+            'label'  => __( 'Keys', 'clean-login' ),
+            'status' => ( $sitekey && $secretkey ) ? 'ok' : 'error',
+            'text'   => ( $sitekey && $secretkey ) ? __( 'Site Key and Secret Key are filled in. Use the test below to validate them with Google.', 'clean-login' ) : __( 'The Site Key or the Secret Key is empty, so every login will fail.', 'clean-login' ),
+        );
+
+        $checks[] = array(
+            'label'  => __( 'Login page', 'clean-login' ),
+            'status' => get_option( 'cl_login_url' ) ? 'ok' : 'warning',
+            'text'   => get_option( 'cl_login_url' ) ? __( 'The [clean-login] shortcode is in use. Open that page in a private window to check that the box is shown.', 'clean-login' ) : __( 'The [clean-login] shortcode is not detected on any page.', 'clean-login' ),
+        );
+
+        $templates = array( 'login-form.php' );
+        if ( get_option( 'users_can_register' ) )
+            $templates[] = 'register-form.php';
+
+        foreach ( $templates as $template ) {
+            $override = locate_template( 'clean-login/' . $template );
+
+            if ( ! $override ) {
+                /* translators: %s: template file name */
+                $text = sprintf( __( '%s: the plugin template is used.', 'clean-login' ), $template );
+                $status = 'ok';
+            } elseif ( strpos( (string) file_get_contents( $override ), 'g-recaptcha' ) === false ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+                /* translators: %s: template file path */
+                $text = sprintf( __( 'The theme overrides this form with %s and that file does not contain the reCAPTCHA box. Delete it or update it from the plugin template.', 'clean-login' ), $override );
+                $status = 'error';
+            } else {
+                /* translators: %s: template file path */
+                $text = sprintf( __( 'The theme overrides this form with %s, which includes the reCAPTCHA box.', 'clean-login' ), $override );
+                $status = 'ok';
+            }
+
+            $checks[] = array( 'label' => __( 'Form template', 'clean-login' ), 'status' => $status, 'text' => $text );
+        }
+
+        $plugins = $this->get_gcaptcha_conflicting_plugins();
+        $checks[] = array(
+            'label'  => __( 'Other plugins', 'clean-login' ),
+            'status' => empty( $plugins ) ? 'ok' : 'warning',
+            /* translators: %s: comma separated list of plugin names */
+            'text'   => empty( $plugins ) ? __( 'No known cache, optimisation or cookie consent plugin detected.', 'clean-login' ) : sprintf( __( 'These plugins can delay or block the Google reCAPTCHA script: %s. Exclude "recaptcha/api.js" from JavaScript delay, defer and combine options, and allow Google reCAPTCHA in the cookie banner.', 'clean-login' ), implode( ', ', $plugins ) ),
+        );
+
+        return $checks;
+    }
+
+    function render_gcaptcha_status_icon( $status ) {
+        $icons = array( 'ok' => array( 'yes-alt', '#00a32a' ), 'warning' => array( 'warning', '#dba617' ), 'error' => array( 'dismiss', '#d63638' ) );
+        $icon = isset( $icons[ $status ] ) ? $icons[ $status ] : $icons['warning'];
+        echo '<span class="dashicons dashicons-' . esc_attr( $icon[0] ) . '" style="color:' . esc_attr( $icon[1] ) . ';"></span>';
+    }
+
+    function render_gcaptcha_diagnostics() {
+        ?>
+        <hr>
+        <h2 id="cl-gcaptcha-diagnostics"><?php echo esc_html__( 'Google reCAPTCHA diagnostics', 'clean-login' ); ?></h2>
+        <?php
+        if ( ! get_option( 'cl_gcaptcha' ) ) {
+            echo '<p>' . esc_html__( 'Google reCAPTCHA is disabled, so the login and registration forms do not validate it.', 'clean-login' ) . '</p>';
+            return;
+        }
+
+        $test = get_transient( 'cl_gcaptcha_test_' . get_current_user_id() );
+        if ( $test !== false )
+            delete_transient( 'cl_gcaptcha_test_' . get_current_user_id() );
+
+        $log = get_option( 'cl_gcaptcha_log', array() );
+        $log = is_array( $log ) ? $log : array();
+        $debug = get_option( 'cl_gcaptcha_debug' );
+        ?>
+        <p><?php echo esc_html__( 'When Google reCAPTCHA is enabled every login and registration is rejected with "CAPTCHA is not valid" unless the reCAPTCHA box is shown and ticked. Use these tools to find out why it fails.', 'clean-login' ); ?></p>
+
+        <h3><?php echo esc_html__( '1. Automatic checks', 'clean-login' ); ?></h3>
+        <table class="widefat striped">
+            <tbody>
+                <?php foreach ( $this->get_gcaptcha_checks() as $check ) : ?>
+                    <tr>
+                        <td style="width:30px;"><?php $this->render_gcaptcha_status_icon( $check['status'] ); ?></td>
+                        <td style="width:160px;"><strong><?php echo esc_html( $check['label'] ); ?></strong></td>
+                        <td><?php echo esc_html( $check['text'] ); ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+
+        <h3><?php echo esc_html__( '2. Test the keys with Google', 'clean-login' ); ?></h3>
+        <?php if ( $test !== false ) : ?>
+            <?php if ( $test['success'] ) : ?>
+                <div class="notice notice-success inline"><p>
+                    <?php echo esc_html__( 'Google validated the answer: the Site Key and the Secret Key work.', 'clean-login' ); ?>
+                    <?php if ( $test['hostname'] && $test['hostname'] !== wp_parse_url( home_url(), PHP_URL_HOST ) ) : ?>
+                        <?php /* translators: %s: hostname returned by Google */ echo esc_html( sprintf( __( 'Hostname reported by Google: %s.', 'clean-login' ), $test['hostname'] ) ); ?>
+                    <?php endif; ?>
+                </p></div>
+            <?php elseif ( $test['secret_only'] && empty( $test['http_error'] ) && ! in_array( 'invalid-input-secret', $test['error_codes'], true ) && ! in_array( 'missing-input-secret', $test['error_codes'], true ) ) : ?>
+                <div class="notice notice-warning inline"><p><?php echo esc_html__( 'The server can reach Google and the Secret Key is accepted. The Site Key was not tested because the box was not ticked: tick it and run the test again.', 'clean-login' ); ?></p></div>
+            <?php else : ?>
+                <div class="notice notice-error inline">
+                    <?php foreach ( $this->describe_gcaptcha_result( $test ) as $message ) : ?>
+                        <p><?php echo esc_html( $message ); ?></p>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        <?php endif; ?>
+
+        <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+            <input type="hidden" name="action" value="clean_login_gcaptcha_test">
+            <?php wp_nonce_field( 'clean_login_gcaptcha_test' ); ?>
+            <div class="g-recaptcha" id="cl-gcaptcha-test-box" data-sitekey="<?php echo esc_attr( get_option( 'cl_gcaptcha_sitekey' ) ); ?>"></div>
+            <div class="notice notice-error inline hidden" id="cl-gcaptcha-test-noscript"><p><?php echo esc_html__( 'The Google reCAPTCHA script did not load in this browser. Check the browser console and any ad or script blocker.', 'clean-login' ); ?></p></div>
+            <p class="description">
+                <?php /* translators: %s: site domain */ echo esc_html( sprintf( __( 'This is the same box the login form uses. If it shows "Invalid domain for site key", add %s to the key domains in the Google reCAPTCHA admin console. If it shows "Invalid key type" or no checkbox, the key is not a reCAPTCHA v2 "I\'m not a robot" checkbox key (v3 and Invisible keys are not supported).', 'clean-login' ), wp_parse_url( home_url(), PHP_URL_HOST ) ) ); ?>
+            </p>
+            <p><input type="submit" class="button" value="<?php echo esc_attr__( 'Tick the box and verify with Google', 'clean-login' ); ?>"></p>
+        </form>
+
+        <h3><?php echo esc_html__( '3. Failed validations log', 'clean-login' ); ?></h3>
+        <p class="description"><?php echo esc_html__( 'While enabled, every login or registration rejected because of reCAPTCHA is stored with the reason Google gave (last 20 attempts). Enable it, reproduce the problem on the login page and come back here. Disable it when you are done.', 'clean-login' ); ?></p>
+        <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+            <input type="hidden" name="action" value="clean_login_gcaptcha_log">
+            <?php wp_nonce_field( 'clean_login_gcaptcha_log' ); ?>
+            <p>
+                <?php if ( $debug ) : ?>
+                    <strong style="color:#00a32a;"><?php echo esc_html__( 'Logging is enabled.', 'clean-login' ); ?></strong>
+                    <button type="submit" name="do" value="disable" class="button"><?php echo esc_html__( 'Disable logging', 'clean-login' ); ?></button>
+                <?php else : ?>
+                    <button type="submit" name="do" value="enable" class="button"><?php echo esc_html__( 'Enable logging', 'clean-login' ); ?></button>
+                <?php endif; ?>
+                <?php if ( ! empty( $log ) ) : ?>
+                    <button type="submit" name="do" value="clear" class="button"><?php echo esc_html__( 'Clear log', 'clean-login' ); ?></button>
+                <?php endif; ?>
+            </p>
+        </form>
+
+        <?php if ( empty( $log ) ) : ?>
+            <p><?php echo esc_html__( 'No failed validations logged.', 'clean-login' ); ?></p>
+        <?php else : ?>
+            <table class="widefat striped">
+                <thead>
+                    <tr>
+                        <th><?php echo esc_html__( 'Date', 'clean-login' ); ?></th>
+                        <th><?php echo esc_html__( 'Form', 'clean-login' ); ?></th>
+                        <th><?php echo esc_html__( 'Reason', 'clean-login' ); ?></th>
+                        <th><?php echo esc_html__( 'Browser', 'clean-login' ); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ( $log as $entry ) : ?>
+                        <tr>
+                            <td><?php echo esc_html( wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $entry['time'] ) ); ?></td>
+                            <td><?php echo esc_html( $entry['context'] ); ?></td>
+                            <td>
+                                <?php foreach ( $this->describe_gcaptcha_result( $entry ) as $message ) : ?>
+                                    <div><?php echo esc_html( $message ); ?></div>
+                                <?php endforeach; ?>
+                                <?php if ( ! empty( $entry['error_codes'] ) ) : ?>
+                                    <code><?php echo esc_html( implode( ', ', $entry['error_codes'] ) ); ?></code>
+                                <?php endif; ?>
+                            </td>
+                            <td><small><?php echo esc_html( $entry['user_agent'] ); ?></small></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+        <?php
     }
 
     function menu()
@@ -397,6 +673,8 @@ class CleanLogin_Settings
 
                 <p class="submit"><input type="submit" name="Submit" class="button-primary" value="<?php echo esc_attr__('Save Changes', 'clean-login'); ?>" /></p>
             </form>
+
+            <?php $this->render_gcaptcha_diagnostics(); ?>
 
         </div>
 <?php
