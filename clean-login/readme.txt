@@ -3,8 +3,8 @@ Contributors: hornero, carazo
 Donate link: https://codection.com/?post_type=surl&p=8712&preview=true
 Tags: login, registration, custom login page, password reset, user profile
 Requires at least: 5.5
-Tested up to: 6.9
-Stable tag: 1.20
+Tested up to: 7.1
+Stable tag: 1.20.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -75,6 +75,9 @@ Please, refer to [Installation section](https://wordpress.org/plugins/clean-logi
 13. WPML Certificate of Compatibility
 
 == Changelog ==
+
+= 1.20.1 - 2026-10-25 =
+*   Fixed: the [clean-login-change-password] shortcode caused a critical error (and "Publishing failed" in the editor) because its template file had been missing from the plugin package since version 1.17
 
 = 1.20 =
 *   New: Google reCAPTCHA diagnostics in Settings → Clean Login — automatic checks (keys, theme template overrides without the reCAPTCHA box, cache/optimisation and cookie consent plugins that can block the Google script), a live test of the Site Key and Secret Key against Google, and an optional log of failed validations with the reason returned by Google
