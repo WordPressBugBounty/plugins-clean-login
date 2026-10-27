@@ -459,6 +459,10 @@ class CleanLogin_Settings
         update_option( 'cl_logout_redirect_url', isset( $post['logoutredirect'] ) && isset( $post['logoutredirect_url'] ) ? esc_url_raw( $post['logoutredirect_url'] ) : home_url() );
         update_option( 'cl_register_redirect', isset( $post['registerredirect'] ) );
         update_option( 'cl_register_redirect_url', isset( $post['registerredirect'] ) && isset( $post['registerredirect_url'] ) ? esc_url_raw( $post['registerredirect_url'] ) : home_url() );
+        update_option( 'cl_change_password_redirect', isset( $post['changepasswordredirect'] ) );
+        update_option( 'cl_change_password_redirect_url', isset( $post['changepasswordredirect'] ) && isset( $post['changepasswordredirect_url'] ) ? esc_url_raw( $post['changepasswordredirect_url'] ) : home_url() );
+        update_option( 'cl_restore_redirect', isset( $post['restoreredirect'] ) );
+        update_option( 'cl_restore_redirect_url', isset( $post['restoreredirect'] ) && isset( $post['restoreredirect_url'] ) ? esc_url_raw( $post['restoreredirect_url'] ) : home_url() );
         update_option( 'cl_lost_password_text', isset( $post['lost_password_text'] ) ? sanitize_text_field( $post['lost_password_text'] ) : '' );
 
         echo '<div class="updated"><p><strong>' . esc_html__( 'Settings saved.', 'clean-login' ) . '</strong></p></div>';
@@ -509,6 +513,10 @@ class CleanLogin_Settings
             $logoutredirect_url = get_option('cl_logout_redirect_url', false) ? esc_url(get_option('cl_logout_redirect_url')) : home_url();
             $registerredirect = get_option('cl_register_redirect', false) ? true : false;
             $registerredirect_url = get_option('cl_register_redirect_url', false) ? esc_url(get_option('cl_register_redirect_url')) : home_url();
+            $changepasswordredirect = get_option('cl_change_password_redirect', false) ? true : false;
+            $changepasswordredirect_url = get_option('cl_change_password_redirect_url', false) ? esc_url(get_option('cl_change_password_redirect_url')) : home_url();
+            $restoreredirect = get_option('cl_restore_redirect', false) ? true : false;
+            $restoreredirect_url = get_option('cl_restore_redirect_url', false) ? esc_url(get_option('cl_restore_redirect_url')) : home_url();
             $lost_password_text = get_option('cl_lost_password_text', '');
             ?>
             <form id="form1" name="form1" method="post" action="">
@@ -663,6 +671,18 @@ class CleanLogin_Settings
                                 <div id="registerredirect_url">
                                     <p class="description"><?php echo esc_html__('URL after redirect (if blank then homepage)', 'clean-login'); ?></p>
                                     <label><input class="regular-text" type="text" name="registerredirect_url" value="<?php echo esc_url( $registerredirect_url ); ?>"></label>
+                                </div>
+                                <br>
+                                <label><input name="changepasswordredirect" type="checkbox" id="changepasswordredirect" <?php if ($changepasswordredirect != '') echo 'checked="checked"'; ?>><?php echo esc_html__('Redirect after password change?', 'clean-login'); ?></label>
+                                <div id="changepasswordredirect_url">
+                                    <p class="description"><?php echo esc_html__('URL after the password has been changed (if blank then homepage)', 'clean-login'); ?></p>
+                                    <label><input class="regular-text" type="text" name="changepasswordredirect_url" value="<?php echo esc_url( $changepasswordredirect_url ); ?>"></label>
+                                </div>
+                                <br>
+                                <label><input name="restoreredirect" type="checkbox" id="restoreredirect" <?php if ($restoreredirect != '') echo 'checked="checked"'; ?>><?php echo esc_html__('Redirect after restore password request?', 'clean-login'); ?></label>
+                                <div id="restoreredirect_url">
+                                    <p class="description"><?php echo esc_html__('URL after the restore link has been sent (if blank then homepage)', 'clean-login'); ?></p>
+                                    <label><input class="regular-text" type="text" name="restoreredirect_url" value="<?php echo esc_url( $restoreredirect_url ); ?>"></label>
                                 </div>
                             </td>
                         </tr>

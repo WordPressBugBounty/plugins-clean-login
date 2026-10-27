@@ -4,7 +4,7 @@ Donate link: https://codection.com/?post_type=surl&p=8712&preview=true
 Tags: login, registration, custom login page, password reset, user profile
 Requires at least: 5.5
 Tested up to: 7.1
-Stable tag: 1.20.1
+Stable tag: 1.22.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -76,8 +76,16 @@ Please, refer to [Installation section](https://wordpress.org/plugins/clean-logi
 
 == Changelog ==
 
+= 1.22.1 - 2026-10-27 =
+*   New: optional redirection after a password change (from [clean-login-change-password] or [clean-login-edit]), in Settings → Clean Login → Redirections. Filterable with `clean_login_change_password_redirect_url`
+*   New: optional redirection after a restore password request, once the email with the link has been sent. Filterable with `clean_login_restore_redirect_url`
+
+= 1.21 - 2026-10-27 =
+*   Security: the pages used by the plugin's shortcodes (login, edit, register, restore and change password) can now only be set by users who can manage the plugin settings (administrators, or the capability set with the `clean_login_admin_capability` filter) and only from published content. Before, a Contributor or Author could replace them with a post of their own just by adding a shortcode to it
+*   Fixed: after clicking the reset link, users are now redirected to the [clean-login-change-password] page when it exists (it falls back to the [clean-login-edit] page, and otherwise a new password is generated)
+
 = 1.20.1 - 2026-10-25 =
-*   Fixed: the [clean-login-change-password] shortcode caused a critical error (and "Publishing failed" in the editor) because its template file had been missing from the plugin package since version 1.17
+*   Fixed: the [clean-login-change-password] shortcode caused a critical error (and "Publishing failed" in the editor) because its template file was missing from the 1.20 package
 
 = 1.20 =
 *   New: Google reCAPTCHA diagnostics in Settings → Clean Login — automatic checks (keys, theme template overrides without the reCAPTCHA box, cache/optimisation and cookie consent plugins that can block the Google script), a live test of the Site Key and Secret Key against Google, and an optional log of failed validations with the reason returned by Google
@@ -597,7 +605,7 @@ Install Clean Login, create a new page, and add the shortcode `[clean-login]` to
 Yes. Create a page with the shortcode `[clean-login-register]`. Make sure user registration is enabled in WordPress Settings → General → Membership.
 
 = How does the password reset / forgot password page work? =
-Add `[clean-login-restore]` to a page. Users enter their username or email and receive a reset link. If you also have a `[clean-login-change-password]` page set up, they will be redirected there to set their own password; otherwise a new password is generated and emailed to them.
+Add `[clean-login-restore]` to a page. Users enter their username or email and receive a reset link. If you also have a `[clean-login-change-password]` page set up, they will be redirected there to set their own password; if not but you have a `[clean-login-edit]` page, they will be redirected there; otherwise a new password is generated and shown to them.
 
 = Can users change their password from the frontend? =
 Yes — use `[clean-login-change-password]` for a focused password change form, or `[clean-login-edit]` for a full profile editor that also includes name, email and password fields.

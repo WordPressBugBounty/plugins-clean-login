@@ -21,6 +21,8 @@ jQuery(document).ready(function($) {
         $('#registerredirect_url').toggle($('#registerredirect').is(':checked'));
         $('#loginredirect_url').toggle($('#loginredirect').is(':checked'));
         $('#logoutredirect_url').toggle($('#logoutredirect').is(':checked'));
+        $('#changepasswordredirect_url').toggle($('#changepasswordredirect').is(':checked'));
+        $('#restoreredirect_url').toggle($('#restoreredirect').is(':checked'));
         $('#emailnotificationcontent').toggle($('#emailnotification').is(':checked'));
         $('#termsconditionsMSG').toggle($('#termsconditions').is(':checked'));
         $('#termsconditionsURL').toggle($('#termsconditions').is(':checked'));
@@ -82,6 +84,14 @@ jQuery(document).ready(function($) {
 
     $('#registerredirect').click(function() {
         $('#registerredirect_url').toggle();
+    });
+
+    $('#changepasswordredirect').click(function() {
+        $('#changepasswordredirect_url').toggle();
+    });
+
+    $('#restoreredirect').click(function() {
+        $('#restoreredirect_url').toggle();
     });
 
     $('#emailnotification').click(function() {

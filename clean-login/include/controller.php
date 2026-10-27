@@ -112,6 +112,7 @@ class CleanLogin_Controller{
                 exit();
             }
             $url = esc_url( add_query_arg( 'updated', 'success', $url ) );
+            $success_url = $url;
 
             $current_user = wp_get_current_user();
             $userdata = array( 'ID' => $current_user->ID );
@@ -154,6 +155,10 @@ class CleanLogin_Controller{
             
             if ( is_wp_error( $user_id ) ) {
                 $url = esc_url( add_query_arg( 'updated', 'failed', $url ) );
+            } elseif ( isset( $userdata['user_pass'] ) && $url == $success_url ) {
+                $change_password_redirect_url = self::get_url_change_password_redirect();
+                if( $change_password_redirect_url )
+                    $url = $change_password_redirect_url;
             }
 
             wp_safe_redirect( $url );
@@ -410,6 +415,11 @@ class CleanLogin_Controller{
                 
                 if( !wp_mail( $email, $subject , $message, array( 'Content-Type: text/html; charset=UTF-8' ) ) )
                     $url = esc_url( add_query_arg( 'sent', 'failed', $url ) );
+                else {
+                    $restore_redirect_url = self::get_url_restore_redirect();
+                    if( $restore_redirect_url )
+                        $url = $restore_redirect_url;
+                }
             }
 
             wp_safe_redirect( $url );
@@ -421,8 +431,10 @@ class CleanLogin_Controller{
             if ( !wp_verify_nonce( $retrieved_nonce, $user_id ) )
                 die( 'Failed security check, expired Activation Link due to duplication or date.' );
 
-            $edit_url = CleanLogin_Controller::get_edit_url();
-            // If edit profile page exists the user will be redirected there
+            $edit_url = CleanLogin_Controller::get_change_password_url();
+            if( $edit_url == '' )
+                $edit_url = CleanLogin_Controller::get_edit_url();
+            // If change password or edit profile page exists the user will be redirected there
             if( $edit_url != '' && !apply_filters( 'clean_login_force_generate_notify_new_password', false ) ) {
                 wp_clear_auth_cookie();
                 wp_set_current_user ( $user_id );
@@ -622,6 +634,23 @@ class CleanLogin_Controller{
         return empty( $restore_id ) ? '' : get_permalink( $restore_id );
     }
 
+    static function get_change_password_url(){
+        $change_password_id = get_option( 'cl_change_password_id' );
+
+        if( empty( $change_password_id ) ){
+            $change_password_id = url_to_postid( get_option( 'cl_change_password_url' ) );
+            
+            if( !empty( $change_password_id ) )
+                update_option( 'cl_change_password_id', $change_password_id );
+        }
+
+        if( function_exists('icl_object_id') ) {
+            $change_password_id = apply_filters( 'wpml_object_id', $change_password_id, 'page', FALSE, ICL_LANGUAGE_CODE );
+        }        
+
+        return empty( $change_password_id ) ? '' : get_permalink( $change_password_id );
+    }
+
     static function get_register_url(){
         $register_id = get_option( 'cl_register_id' );
 
@@ -644,6 +673,20 @@ class CleanLogin_Controller{
 			return false;
 	
 		return get_option('cl_register_redirect_url', false) ? esc_url( apply_filters( 'clean_login_register_redirect_url', CleanLogin_Controller::get_translated_option_page('cl_register_redirect_url' ) ) ): false;
+	}
+
+    static function get_url_change_password_redirect(){
+		if( get_option('cl_change_password_redirect', false) == '' )
+			return false;
+	
+		return get_option('cl_change_password_redirect_url', false) ? esc_url( apply_filters( 'clean_login_change_password_redirect_url', CleanLogin_Controller::get_translated_option_page('cl_change_password_redirect_url' ) ) ): false;
+	}
+
+    static function get_url_restore_redirect(){
+		if( get_option('cl_restore_redirect', false) == '' )
+			return false;
+	
+		return get_option('cl_restore_redirect_url', false) ? esc_url( apply_filters( 'clean_login_restore_redirect_url', CleanLogin_Controller::get_translated_option_page('cl_restore_redirect_url' ) ) ): false;
 	}
 
     function redirect_email_change_to_frontend(){

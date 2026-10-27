@@ -249,14 +249,27 @@ class CleanLogin_Shortcode{
 	}
 
 	function get_pages_with_shortcodes( int $post_id ) {
-		if( 'trash' == get_post_status( $post_id ) )
+		if( wp_is_post_revision( $post_id ) || wp_is_post_autosave( $post_id ) )
 			return;
 
-		$revision = wp_is_post_revision( $post_id );
-		if( $revision ) 
-			$post_id = $revision;
-		
+		if( !current_user_can( apply_filters( 'clean_login_admin_capability', 'manage_options' ) ) || !current_user_can( 'edit_post', $post_id ) )
+			return;
+
 		$post = get_post( $post_id );
+		if( !$post || 'trash' == $post->post_status )
+			return;
+
+		$keys = array( 'login' => 'clean-login', 'edit' => 'clean-login-edit', 'register' => 'clean-login-register', 'restore' => 'clean-login-restore', 'change_password' => 'clean-login-change-password' );
+
+		if( 'publish' != $post->post_status ) {
+			foreach ( $keys as $key => $shortcode ) {
+				if( $post_id == get_option( 'cl_' . $key . '_id' ) ){
+					delete_option( 'cl_' . $key . '_url' );
+					delete_option( 'cl_' . $key . '_id' );
+				}
+			}
+			return;
+		}
 	
 		if( has_shortcode( $post->post_content, 'clean-login' ) ) {
 			update_option( 'cl_login_url', get_permalink( $post->ID ) );
@@ -284,7 +297,6 @@ class CleanLogin_Shortcode{
 		}
 
 		// delete if not used
-		$keys = array( 'login' => 'clean-login', 'edit' => 'clean-login-edit', 'register' => 'clean-login-register', 'restore' => 'clean-login-restore', 'change_password' => 'clean-login-change-password' );
 		foreach ( $keys as $key => $shortcode ) {
 			if( $post_id == get_option( 'cl_' . $key . '_id' ) && !has_shortcode( $post->post_content, $shortcode ) ){
 				delete_option( 'cl_' . $key . '_url' );
@@ -312,6 +324,11 @@ class CleanLogin_Shortcode{
 		if( $post_id == get_option( 'cl_restore_id' ) ){
 			delete_option( 'cl_restore_url' );
 			delete_option( 'cl_restore_id' );
+		}
+
+		if( $post_id == get_option( 'cl_change_password_id' ) ){
+			delete_option( 'cl_change_password_url' );
+			delete_option( 'cl_change_password_id' );
 		}
 	}	
 }
