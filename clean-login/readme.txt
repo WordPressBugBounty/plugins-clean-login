@@ -4,7 +4,7 @@ Donate link: https://codection.com/?post_type=surl&p=8712&preview=true
 Tags: login, registration, custom login page, password reset, user profile
 Requires at least: 5.5
 Tested up to: 7.1
-Stable tag: 1.22.1
+Stable tag: 1.22.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -75,6 +75,9 @@ Please, refer to [Installation section](https://wordpress.org/plugins/clean-logi
 13. WPML Certificate of Compatibility
 
 == Changelog ==
+
+= 1.22.2 - 2026-10-27 =
+*   Fixed: when a password restore is requested for a username or email that does not exist (or the email cannot be sent), the error is always shown on the same restore page and the restore redirection is never applied. Only a successful request follows the redirection
 
 = 1.22.1 - 2026-10-27 =
 *   New: optional redirection after a password change (from [clean-login-change-password] or [clean-login-edit]), in Settings → Clean Login → Redirections. Filterable with `clean_login_change_password_redirect_url`

@@ -373,6 +373,10 @@ class CleanLogin_Controller{
 
         // RESTORE a password by sending an email with the activation link
         } else if ( $cleanlogin_action == 'restore' ) {
+            $restore_form_url = get_permalink( $post );
+            if ( ! empty( $restore_form_url ) )
+                $url = $this->url_cleaner( $restore_form_url );
+
             if ( ! $cleanlogin_has_verified_nonce ) {
                 wp_safe_redirect( esc_url( add_query_arg( 'sent', 'failed', $url ) ) );
                 exit();
@@ -423,6 +427,7 @@ class CleanLogin_Controller{
             }
 
             wp_safe_redirect( $url );
+            exit();
 
         // When a user click the activation link goes here to RESTORE his/her password
         } else if ( isset( $_REQUEST['restore'] ) ) {
