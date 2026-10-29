@@ -4,19 +4,19 @@ Donate link: https://codection.com/?post_type=surl&p=8712&preview=true
 Tags: login, registration, custom login page, password reset, user profile
 Requires at least: 5.5
 Tested up to: 7.1
-Stable tag: 1.22.2
+Stable tag: 2.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Custom frontend login, registration, user profile and password reset forms via shortcodes — no coding required. WPML certified, reCAPTCHA and WooCommerce compatible.
+Frontend login, registration, profile and password reset forms with blocks or shortcodes. WPML certified, reCAPTCHA and WooCommerce compatible.
 
 == Description ==
 
 **Try it out on your free dummy site: Click here => [https://demo.tastewp.com/clean-login](https://demo.tastewp.com/clean-login)**
 
-**Clean Login** lets you replace the default WordPress login and registration pages with fully customised **frontend forms** — no coding required. Place any form anywhere on your site using a simple shortcode.
+**Clean Login** lets you replace the default WordPress login and registration pages with fully customised **frontend forms** — no coding required. Place any form anywhere on your site using a block or a simple shortcode.
 
-Whether you need a **custom login page**, a **user registration form**, a **password reset page** or an **editable user profile**, Clean Login has you covered with one shortcode per form:
+Whether you need a **custom login page**, a **user registration form**, a **password reset page** or an **editable user profile**, Clean Login has you covered with one block and one shortcode per form:
 
 *   `[clean-login]` — Custom login form with show/hide password toggle
 *   `[clean-login-register]` — User registration form with CAPTCHA, reCAPTCHA and email validation
@@ -25,9 +25,12 @@ Whether you need a **custom login page**, a **user registration form**, a **pass
 *   `[clean-login-change-password]` — Dedicated password change form with visual strength meter
 *   `[clean-login-logout]` — Standalone logout link, usable anywhere on your site
 
+Every form is also available as a **block** in the "Clean Login" category of the block editor (Login form, Register form, Restore password form, Edit profile form, Change password form and Logout link), with a live preview of the form while you edit.
+
 ### Why choose Clean Login?
 
-*   **No coding** — drop a shortcode into any page or post and the form appears instantly
+*   **No coding** — add a block or drop a shortcode into any page or post and the form appears instantly
+*   **Block editor ready** — one block per form with live preview, also usable in block widget areas
 *   **Fully responsive** — forms adapt to any screen size and integrate with your theme's CSS
 *   **SEO friendly** — login and registration pages are automatically marked as `noindex` and excluded from sitemaps, keeping your site's SEO clean
 *   **Secure** — nonce verification on every form, honeypot antispam, CAPTCHA and Google reCAPTCHA support
@@ -38,6 +41,7 @@ Whether you need a **custom login page**, a **user registration form**, a **pass
 ### Features
 
 *   Custom login page with redirect after login and logout
+*   Optional redirection of wp-login.php and wp-admin to your login page, with conflict checks before enabling it and an emergency switch in wp-config.php
 *   Frontend user registration with optional email verification
 *   Forgot password / password reset via email link
 *   Dedicated change-password form with animated strength meter (Weak / Fair / Good / Strong)
@@ -50,7 +54,7 @@ Whether you need a **custom login page**, a **user registration form**, a **pass
 *   Use email address as username
 *   Automatic login after registration
 *   Customisable "Lost password?" link text from the settings panel
-*   Auto-linked forms — shortcodes detect each other and generate links automatically
+*   Auto-linked forms — shortcodes and blocks detect each other and generate links automatically
 *   Override any template from your theme (`theme/clean-login/` folder)
 *   AJAX compatible
 
@@ -65,16 +69,30 @@ Please, refer to [Installation section](https://wordpress.org/plugins/clean-logi
 3. Frontend user profile editor
 4. Forgot password / password reset form
 5. Registration form with CAPTCHA and Google reCAPTCHA
-6. Change password form with visual password strength meter
-7. Settings access from the WordPress dashboard
-8. Plugin settings page
-9. Settings menu
-10. Plugin status — shows which shortcodes are active and on which pages
-11. Options section
-12. Settings saved confirmation
-13. WPML Certificate of Compatibility
+6. Settings access from the WordPress dashboard
+7. Plugin settings page
+8. Settings menu
+9. Plugin status — shows which shortcodes are active and on which pages
+10. Options section
+11. Plugin status once the login page has been created
+12. WPML Certificate of Compatibility
+13. Change password form with visual password strength meter
+14. Clean Login blocks in the block editor, with a live preview of the form
+15. Login page redirection checks
 
 == Changelog ==
+
+= 2.0 - 2026-10-28 =
+*   New: optional redirection of wp-login.php (and of wp-admin for visitors who are not logged in) to the [clean-login] page, in Settings → Clean Login → Login page redirection. The register and lost password screens go to the [clean-login-register] and [clean-login-restore] pages when they exist (registration only when "Anyone can register" is enabled, so in multisite the network registration of wp-signup.php is kept unless the site enables it), and the page the visitor wanted to open is kept so they get there after logging in. Logout, password reset links, password protected posts, the "session expired" box and any form sent to wp-login.php keep working as usual. It is only applied while the login page is published, and it can be turned off from wp-config.php with `define( 'CLEAN_LOGIN_DISABLE_LOGIN_REDIRECT', true );` in case of lockout. In multisite it is set per site, and the constant disables it in the whole network
+*   New: Gutenberg blocks for every form (Login form, Register form, Restore password form, Edit profile form, Change password form and Logout link) in a "Clean Login" category, with a live preview in the editor (the login, register and restore forms are previewed even if you are logged in). Pages using the blocks are detected like the ones using the shortcodes, and the styles are loaded wherever a block is rendered, including block theme templates
+*   New: login page redirection checks in Settings → Clean Login. Before enabling the redirection they look for plugins that hide, rename or replace wp-login.php, security plugins with similar options, other plugins or themes using the login hooks, and open wp-login.php, wp-admin and the login page as a visitor. The redirection is not enabled while any check fails
+*   Security: the password restore link now uses the WordPress password reset key instead of a nonce, so it can only be used once and expires like the one of WordPress (1 day by default). Before, a leaked link could be opened again during 12-24 hours to log in as that user. Thanks to StickyFingaz420 for the responsible disclosure
+*   Fixed: a post type that cannot be viewed on its own (template parts, synced patterns, navigation menus…) could be taken as the login, register, restore, edit or change password page when it contained the shortcode or the block, so the forms pointed to it
+*   Fixed: the pages of the forms are forgotten when they are deleted permanently, not only when they are moved to the trash
+*   Fixed: [clean-login-register] printed the "Registration is not allowed" message outside of its place in the page instead of returning it
+*   Fixed: the login page ID was saved in the option of the login page URL when it had to be recovered from the URL
+*   Fixed: the edit profile page could not be recovered from its URL and it was not translated with WPML
+*   Fixed: the register page ID recovered from its URL was never saved
 
 = 1.22.2 - 2026-10-27 =
 *   Fixed: when a password restore is requested for a username or email that does not exist (or the email cannot be sent), the error is always shown on the same restore page and the restore redirection is never applied. Only a successful request follows the redirection
@@ -596,13 +614,25 @@ Please, refer to [Installation section](https://wordpress.org/plugins/clean-logi
 
 == Upgrade Notice ==
 
+= 2.0 =
+*   Blocks for every form and an optional redirection of wp-login.php and wp-admin to your login page. Nothing changes until you enable the redirection in Settings → Clean Login
+
 = 1.0 =
 *   First installation
 
 == Frequently Asked Questions ==
 
 = How do I create a custom login page? =
-Install Clean Login, create a new page, and add the shortcode `[clean-login]` to its content. Save the page — that's it. Your custom frontend login form is live.
+Install Clean Login, create a new page, and add the "Login form" block (or the shortcode `[clean-login]`) to its content. Publish the page — that's it. Your custom frontend login form is live.
+
+= Can I use blocks instead of shortcodes? =
+Yes. Every form has its own block in the "Clean Login" category of the block editor: Login form, Register form, Restore password form, Edit profile form, Change password form and Logout link. The editor shows a live preview of each form. Pages with blocks are detected exactly like pages with shortcodes, so the forms link to each other and the plugin status in Settings → Clean Login shows them. The forms are still configured in Settings → Clean Login; shortcode attributes such as `role`, `template`, `show_email` or `text` are only available with the shortcodes for now.
+
+= Can I send wp-login.php and wp-admin to my login page? =
+Yes. Go to Settings → Clean Login and enable "Login page redirection". Visitors who open wp-login.php, or wp-admin without being logged in, are sent to your login page and, after logging in, back to the page they wanted to open. Before enabling it the plugin checks that no other plugin, theme or server rule hides or redirects wp-login.php, and it is not enabled while any check fails. Logout, password reset links, password protected posts and the "session expired" box of the dashboard keep using wp-login.php. In a multisite network it is set per site.
+
+= I enabled the login page redirection and I cannot log in. What can I do? =
+Add `define( 'CLEAN_LOGIN_DISABLE_LOGIN_REDIRECT', true );` to wp-config.php: wp-login.php works as usual again (in the whole network, in multisite). Fix the login page, check it in a private window and remove the line. You can also deactivate Clean Login by renaming its folder via FTP.
 
 = Can I create a custom user registration page? =
 Yes. Create a page with the shortcode `[clean-login-register]`. Make sure user registration is enabled in WordPress Settings → General → Membership.
@@ -657,13 +687,13 @@ Now going through the points above, you should now see a new&nbsp;_Clean Login_&
 
 [Setting Menu image link](https://ps.w.org/clean-login/assets/screenshot-8.jpg)
 
-If you get any error after following through the steps above please contact us through item support comments so we can get back to you with possible helps in installing the plugin and more. On successful activation of this plugin, you should be able to see the login form when you place this shortcode&nbsp;_[clean-login]_&nbsp;in any page or post
+If you get any error after following through the steps above please contact us through item support comments so we can get back to you with possible helps in installing the plugin and more. On successful activation of this plugin, you should be able to see the login form when you add the _Login form_ block or place this shortcode&nbsp;_[clean-login]_&nbsp;in any page or post
 
 * * *
 
 ### Settings
 
-Below, the description of each shortcode for use as registration, login, lost password and profile editor forms
+Below, the description of each shortcode for use as registration, login, lost password and profile editor forms. Each one is also available as a block in the _Clean Login_ category of the block editor (_Login form_, _Edit profile form_, _Register form_, _Restore password form_, _Change password form_ and _Logout link_)
 
 *   _[clean-login]_ This shortcode contains login form and login information.
 *   _[clean-login-edit]_ This shortcode contains the profile editor. If you include in a page/post a link will appear on your login preview.
@@ -680,6 +710,8 @@ In this setting page you can also find the way to enable/disable the differents 
 
 [Options image link](https://ps.w.org/clean-login/assets/screenshot-10.jpg)
 
+To send wp-login.php and wp-admin to your login page, enable _Login page redirection_ in the options. The plugin runs some checks first (other plugins that hide or redirect wp-login.php, server rules, and the login page itself as a visitor) and does not enable it while any of them fails. You can run the checks again at any time with the _Run all the checks_ button at the bottom of the settings page. If you ever get locked out, add `define( 'CLEAN_LOGIN_DISABLE_LOGIN_REDIRECT', true );` to wp-config.php.
+
 Regarding the widget usage, just place the&nbsp;_Clean Login status and links_&nbsp;widget in the widget area you prefer. It will show the user status and the links to the pages/posts which contains the plugin shortcodes.
 
 Please feel free to contact us if you have any questions.
@@ -688,7 +720,7 @@ Please feel free to contact us if you have any questions.
 
 ### Example
 
-A post/page need to be created by typing the main shortcode&nbsp;_[clean-login]_&nbsp;in the content.
+A post/page need to be created by adding the _Login form_ block or typing the main shortcode&nbsp;_[clean-login]_&nbsp;in the content.
 
 When you save or update this post/page you will see the login form.
 
@@ -696,7 +728,7 @@ And also in the setting page&nbsp;_[clean-login]_&nbsp;entry will be updated poi
 
 [Settings updated image link](https://ps.w.org/clean-login/assets/screenshot-11.jpg)
 
-We would repeat the same process with the rest of shortcodes if we need it:
+We would repeat the same process with the rest of blocks or shortcodes if we need it:
 
 *   _[clean-login-edit]_&nbsp;to create an edit profile form
 *   _[clean-login-register]_&nbsp;to create a registration form

@@ -1,0 +1,19 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "clean-login/edit",
+	"title": "Edit profile form",
+	"category": "clean-login",
+	"icon": "admin-users",
+	"description": "Form for logged in users to edit their profile. Same as [clean-login-edit].",
+	"keywords": [
+		"login",
+		"clean login"
+	],
+	"textdomain": "clean-login",
+	"supports": {
+		"html": false
+	},
+	"editorScript": "clean-login-blocks",
+	"style": "clean-login-css"
+}

@@ -72,9 +72,21 @@ class CleanLogin_Frontend{
         if( !CleanLogin_Shortcode::has_clean_login() )
             return;
 
-        wp_enqueue_style( 'clean-login-css', CLEAN_LOGIN_URL . 'content/style.css', array(), CLEAN_LOGIN_VERSION );
-        wp_enqueue_style( 'clean-login-bootstrap-icons', CLEAN_LOGIN_URL . 'content/bootstrap-icons.css', array(), CLEAN_LOGIN_VERSION );
-        wp_enqueue_script( 'clean-login-js', CLEAN_LOGIN_URL . 'content/js/clean-login.js', array(), CLEAN_LOGIN_VERSION, true );
+        self::enqueue_assets();
+    }
+
+    static function register_assets() {
+        wp_register_style( 'clean-login-bootstrap-icons', CLEAN_LOGIN_URL . 'content/bootstrap-icons.css', array(), CLEAN_LOGIN_VERSION );
+        wp_register_style( 'clean-login-css', CLEAN_LOGIN_URL . 'content/style.css', array( 'clean-login-bootstrap-icons' ), CLEAN_LOGIN_VERSION );
+        wp_register_script( 'clean-login-js', CLEAN_LOGIN_URL . 'content/js/clean-login.js', array(), CLEAN_LOGIN_VERSION, true );
+    }
+
+    static function enqueue_assets() {
+        if( !wp_style_is( 'clean-login-css', 'registered' ) )
+            self::register_assets();
+
+        wp_enqueue_style( 'clean-login-css' );
+        wp_enqueue_script( 'clean-login-js' );
     }
 
     static function get_template_file( $template, $param = array() ){

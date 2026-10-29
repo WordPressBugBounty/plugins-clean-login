@@ -1,0 +1,19 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "clean-login/register",
+	"title": "Register form",
+	"category": "clean-login",
+	"icon": "id",
+	"description": "Registration form for new users. Same as [clean-login-register].",
+	"keywords": [
+		"login",
+		"clean login"
+	],
+	"textdomain": "clean-login",
+	"supports": {
+		"html": false
+	},
+	"editorScript": "clean-login-blocks",
+	"style": "clean-login-css"
+}

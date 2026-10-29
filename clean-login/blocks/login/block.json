@@ -1,0 +1,19 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "clean-login/login",
+	"title": "Login form",
+	"category": "clean-login",
+	"icon": "lock",
+	"description": "Login form, or the user information and a logout link when the visitor is already logged in. Same as [clean-login].",
+	"keywords": [
+		"login",
+		"clean login"
+	],
+	"textdomain": "clean-login",
+	"supports": {
+		"html": false
+	},
+	"editorScript": "clean-login-blocks",
+	"style": "clean-login-css"
+}

@@ -403,9 +403,13 @@ class CleanLogin_Controller{
             else {
                 $user = get_user_by( 'login', $username );
 
-                $url_msg = get_permalink();
-                $url_msg = esc_url( add_query_arg( 'restore', $user->ID, $url_msg ) );
-                $url_msg = wp_nonce_url( $url_msg, $user->ID );
+                $key = get_password_reset_key( $user );
+                if ( is_wp_error( $key ) ) {
+                    wp_safe_redirect( esc_url( add_query_arg( 'sent', 'failed', $url ) ) );
+                    exit();
+                }
+
+                $url_msg = esc_url( add_query_arg( array( 'restore' => $user->ID, 'key' => $key ), get_permalink() ) );
 
                 $email = $user->user_email;
                 $blog_title = get_bloginfo();
@@ -432,9 +436,15 @@ class CleanLogin_Controller{
         // When a user click the activation link goes here to RESTORE his/her password
         } else if ( isset( $_REQUEST['restore'] ) ) {
             $user_id = absint( wp_unslash( $_REQUEST['restore'] ) );
-            $retrieved_nonce = isset( $_REQUEST['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['_wpnonce'] ) ) : '';
-            if ( !wp_verify_nonce( $retrieved_nonce, $user_id ) )
+            $retrieved_key = isset( $_REQUEST['key'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['key'] ) ) : '';
+            $restore_user = get_userdata( $user_id );
+            $checked_user = $restore_user ? check_password_reset_key( $retrieved_key, $restore_user->user_login ) : false;
+            if ( ! $checked_user || is_wp_error( $checked_user ) )
                 die( 'Failed security check, expired Activation Link due to duplication or date.' );
+
+            global $wpdb;
+            $wpdb->update( $wpdb->users, array( 'user_activation_key' => '' ), array( 'ID' => $user_id ) );
+            clean_user_cache( $user_id );
 
             $edit_url = CleanLogin_Controller::get_change_password_url();
             if( $edit_url == '' )
@@ -595,7 +605,7 @@ class CleanLogin_Controller{
             $login_id = url_to_postid( get_option( 'cl_login_url' ) );
             
             if( !empty( $login_id ) )
-                update_option( 'cl_login_url', $login_id );
+                update_option( 'cl_login_id', $login_id );
         }
 
         if( function_exists('icl_object_id') ) {
@@ -609,13 +619,13 @@ class CleanLogin_Controller{
         $edit_id = get_option( 'cl_edit_id' );
 
         if( empty( $edit_id ) ){
-            $edit_id = url_to_postid( get_option( 'cl_edit_id' ) );
+            $edit_id = url_to_postid( get_option( 'cl_edit_url' ) );
             
             if( !empty( $edit_id ) )
                 update_option( 'cl_edit_id', $edit_id );
         }
 
-        if( function_exists('cl_edit_id') ) {
+        if( function_exists('icl_object_id') ) {
             $edit_id = apply_filters( 'wpml_object_id', $edit_id, 'page', FALSE, ICL_LANGUAGE_CODE );
         }
         
@@ -662,8 +672,8 @@ class CleanLogin_Controller{
         if( empty( $register_id ) ){
             $register_id = url_to_postid( get_option( 'cl_register_url' ) );
             
-            if( !empty( $restore_id ) )
-                update_option( 'cl_register_id', $restore_id );
+            if( !empty( $register_id ) )
+                update_option( 'cl_register_id', $register_id );
         }
         
         if( function_exists('icl_object_id') ) {

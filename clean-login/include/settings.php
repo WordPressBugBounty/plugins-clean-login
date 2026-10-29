@@ -8,6 +8,12 @@ class CleanLogin_Settings
     {
         add_action('after_setup_theme', array($this, 'maybe_remove_admin_bar'));
         add_action('admin_init', array($this, 'maybe_block_dashboard_access'), 1);
+        add_action('login_init', array($this, 'maybe_redirect_wp_login'), 1);
+        add_filter('login_url', array($this, 'filter_login_url'), 10, 2);
+        add_filter('lostpassword_url', array($this, 'filter_lostpassword_url'), 10, 2);
+        add_filter('register_url', array($this, 'filter_register_url'));
+        add_action('admin_notices', array($this, 'wp_login_redirect_notice'));
+        add_action('admin_post_clean_login_wp_login_check', array($this, 'wp_login_check_action'));
         add_action('admin_menu', array($this, 'menu'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue'));
         add_action('admin_post_clean_login_gcaptcha_test', array($this, 'gcaptcha_test'));
@@ -104,6 +110,10 @@ class CleanLogin_Settings
             'iubenda-cookie-law-solution', 'real-cookie-banner', 'borlabs-cookie', 'termly', 'uk-cookie-consent',
         );
 
+        return $this->get_active_plugins_by_slug( $slugs );
+    }
+
+    function get_active_plugins_by_slug( $slugs ) {
         if ( ! function_exists( 'get_plugins' ) )
             require_once ABSPATH . 'wp-admin/includes/plugin.php';
 
@@ -136,7 +146,7 @@ class CleanLogin_Settings
         $checks[] = array(
             'label'  => __( 'Login page', 'clean-login' ),
             'status' => get_option( 'cl_login_url' ) ? 'ok' : 'warning',
-            'text'   => get_option( 'cl_login_url' ) ? __( 'The [clean-login] shortcode is in use. Open that page in a private window to check that the box is shown.', 'clean-login' ) : __( 'The [clean-login] shortcode is not detected on any page.', 'clean-login' ),
+            'text'   => get_option( 'cl_login_url' ) ? __( 'The login form (Login form block or [clean-login] shortcode) is in use. Open that page in a private window to check that the box is shown.', 'clean-login' ) : __( 'The login form (Login form block or [clean-login] shortcode) is not detected on any page.', 'clean-login' ),
         );
 
         $templates = array( 'login-form.php' );
@@ -334,6 +344,414 @@ class CleanLogin_Settings
         }
     }
 
+    static function is_wp_login_redirect_disabled_by_constant()
+    {
+        return defined( 'CLEAN_LOGIN_DISABLE_LOGIN_REDIRECT' ) && CLEAN_LOGIN_DISABLE_LOGIN_REDIRECT;
+    }
+
+    static function get_wp_login_redirect_url()
+    {
+        if ( ! get_option( 'cl_wp_login_redirect' ) || self::is_wp_login_redirect_disabled_by_constant() )
+            return '';
+
+        $login_id = get_option( 'cl_login_id' );
+        if ( empty( $login_id ) || get_post_status( $login_id ) !== 'publish' )
+            return '';
+
+        return CleanLogin_Controller::get_login_url();
+    }
+
+    function maybe_redirect_wp_login()
+    {
+        $login_url = self::get_wp_login_redirect_url();
+        if ( $login_url === '' )
+            return;
+
+        if ( ! isset( $_SERVER['REQUEST_METHOD'] ) || strtoupper( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) ) !== 'GET' )
+            return;
+
+        // phpcs:disable WordPress.Security.NonceVerification.Recommended
+        if ( isset( $_GET['interim-login'] ) || isset( $_GET['checkemail'] ) )
+            return;
+
+        $action = isset( $_GET['action'] ) ? sanitize_key( wp_unslash( $_GET['action'] ) ) : 'login';
+        $redirect_to = isset( $_GET['redirect_to'] ) ? wp_validate_redirect( esc_url_raw( wp_unslash( $_GET['redirect_to'] ) ), '' ) : '';
+        // phpcs:enable WordPress.Security.NonceVerification.Recommended
+
+        if ( $action === 'login' ) {
+            $url = $login_url;
+        } elseif ( $action === 'register' ) {
+            $url = get_option( 'users_can_register' ) ? CleanLogin_Controller::get_register_url() : '';
+        } elseif ( $action === 'lostpassword' || $action === 'retrievepassword' ) {
+            $url = CleanLogin_Controller::get_restore_password_url();
+        } else {
+            return;
+        }
+
+        if ( empty( $url ) )
+            return;
+
+        if ( $action === 'login' && $redirect_to !== '' )
+            $url = add_query_arg( 'url', rawurlencode( $redirect_to ), $url );
+
+        wp_safe_redirect( $url );
+        exit;
+    }
+
+    function filter_login_url( $login_url, $redirect )
+    {
+        if ( is_admin() )
+            return $login_url;
+
+        $url = self::get_wp_login_redirect_url();
+        if ( $url === '' )
+            return $login_url;
+
+        return empty( $redirect ) ? $url : add_query_arg( 'url', rawurlencode( $redirect ), $url );
+    }
+
+    function filter_lostpassword_url( $lostpassword_url, $redirect )
+    {
+        if ( is_admin() || self::get_wp_login_redirect_url() === '' )
+            return $lostpassword_url;
+
+        $url = CleanLogin_Controller::get_restore_password_url();
+        return empty( $url ) ? $lostpassword_url : $url;
+    }
+
+    function filter_register_url( $register_url )
+    {
+        if ( is_admin() || ! get_option( 'users_can_register' ) || self::get_wp_login_redirect_url() === '' )
+            return $register_url;
+
+        $url = CleanLogin_Controller::get_register_url();
+        return empty( $url ) ? $register_url : $url;
+    }
+
+    function wp_login_redirect_notice()
+    {
+        if ( ! get_option( 'cl_wp_login_redirect' ) || ! current_user_can( apply_filters( 'clean_login_admin_capability', 'manage_options' ) ) )
+            return;
+
+        if ( self::is_wp_login_redirect_disabled_by_constant() )
+            $message = __( 'Clean Login: the redirection of wp-login.php to the login page is disabled by the CLEAN_LOGIN_DISABLE_LOGIN_REDIRECT constant in wp-config.php. Remove it when the login page works again.', 'clean-login' );
+        elseif ( self::get_wp_login_redirect_url() === '' )
+            $message = __( 'Clean Login: the redirection of wp-login.php is enabled but there is no published page with the Login form block or the [clean-login] shortcode, so it is not being applied and wp-login.php keeps working as usual.', 'clean-login' );
+        else
+            return;
+
+        echo '<div class="notice notice-warning"><p>' . esc_html( $message ) . '</p></div>';
+    }
+
+    function get_callback_file( $callback )
+    {
+        try {
+            if ( is_string( $callback ) && strpos( $callback, '::' ) !== false )
+                $callback = explode( '::', $callback, 2 );
+
+            if ( is_array( $callback ) && count( $callback ) === 2 )
+                $reflection = new ReflectionMethod( $callback[0], $callback[1] );
+            elseif ( is_string( $callback ) || $callback instanceof Closure )
+                $reflection = new ReflectionFunction( $callback );
+            elseif ( is_object( $callback ) && method_exists( $callback, '__invoke' ) )
+                $reflection = new ReflectionMethod( $callback, '__invoke' );
+            else
+                return '';
+        } catch ( ReflectionException $e ) {
+            return '';
+        }
+
+        return (string) $reflection->getFileName();
+    }
+
+    function get_file_origin( $file )
+    {
+        $file = wp_normalize_path( $file );
+        if ( $file === '' || strpos( $file, wp_normalize_path( CLEAN_LOGIN_PATH ) ) === 0 )
+            return '';
+
+        $plugin_dir = trailingslashit( wp_normalize_path( WP_PLUGIN_DIR ) );
+        if ( strpos( $file, $plugin_dir ) === 0 ) {
+            $slug = strtok( substr( $file, strlen( $plugin_dir ) ), '/' );
+
+            if ( ! function_exists( 'get_plugins' ) )
+                require_once ABSPATH . 'wp-admin/includes/plugin.php';
+
+            foreach ( get_plugins() as $plugin_file => $data ) {
+                if ( dirname( $plugin_file ) === $slug || $plugin_file === $slug )
+                    return $data['Name'];
+            }
+
+            return $slug;
+        }
+
+        $mu_plugin_dir = trailingslashit( wp_normalize_path( WPMU_PLUGIN_DIR ) );
+        if ( strpos( $file, $mu_plugin_dir ) === 0 )
+            /* translators: %s: must-use plugin file name */
+            return sprintf( __( 'must-use plugin %s', 'clean-login' ), strtok( substr( $file, strlen( $mu_plugin_dir ) ), '/' ) );
+
+        $theme_root = trailingslashit( wp_normalize_path( get_theme_root() ) );
+        if ( strpos( $file, $theme_root ) === 0 )
+            /* translators: %s: theme folder name */
+            return sprintf( __( 'theme %s', 'clean-login' ), strtok( substr( $file, strlen( $theme_root ) ), '/' ) );
+
+        return '';
+    }
+
+    function get_wp_login_hooked_origins()
+    {
+        global $wp_filter;
+
+        $hooks = array( 'login_init', 'login_form_login', 'login_form_register', 'login_form_lostpassword', 'auth_redirect', 'login_url', 'lostpassword_url', 'register_url', 'site_url', 'network_site_url' );
+        $origins = array();
+
+        foreach ( $hooks as $hook ) {
+            if ( empty( $wp_filter[ $hook ] ) )
+                continue;
+
+            foreach ( $wp_filter[ $hook ]->callbacks as $callbacks ) {
+                foreach ( $callbacks as $callback ) {
+                    $origin = $this->get_file_origin( $this->get_callback_file( $callback['function'] ) );
+                    if ( $origin !== '' )
+                        $origins[ $origin ][ $hook ] = $hook;
+                }
+            }
+        }
+
+        return $origins;
+    }
+
+    function wp_login_loopback( $url )
+    {
+        $response = wp_remote_get( $url, array(
+            'redirection' => 0,
+            'timeout'     => 10,
+            'sslverify'   => apply_filters( 'https_local_ssl_verify', false ),
+            'cookies'     => array(),
+        ) );
+
+        if ( is_wp_error( $response ) )
+            return array( 'error' => $response->get_error_message(), 'code' => 0, 'location' => '', 'body' => '' );
+
+        return array(
+            'error'    => '',
+            'code'     => (int) wp_remote_retrieve_response_code( $response ),
+            'location' => (string) wp_remote_retrieve_header( $response, 'location' ),
+            'body'     => (string) wp_remote_retrieve_body( $response ),
+        );
+    }
+
+    function is_url_of_page( $url, $page_url )
+    {
+        $page_path = untrailingslashit( strtok( $page_url, '?' ) );
+        return $page_path !== '' && strpos( $url, $page_path ) === 0;
+    }
+
+    function get_wp_login_static_checks()
+    {
+        $checks = array();
+
+        $login_id = get_option( 'cl_login_id' );
+        $login_published = ! empty( $login_id ) && get_post_status( $login_id ) === 'publish';
+        $checks[] = array(
+            'label'  => __( 'Login page', 'clean-login' ),
+            'status' => $login_published ? 'ok' : 'error',
+            /* translators: %s: login page URL */
+            'text'   => $login_published ? sprintf( __( 'Visitors will be sent to %s.', 'clean-login' ), CleanLogin_Controller::get_login_url() ) : __( 'There is no published page with the Login form block or the [clean-login] shortcode. Create it before enabling the redirection.', 'clean-login' ),
+        );
+
+        if ( self::is_wp_login_redirect_disabled_by_constant() ) {
+            $checks[] = array(
+                'label'  => 'wp-config.php',
+                'status' => 'warning',
+                'text'   => __( 'CLEAN_LOGIN_DISABLE_LOGIN_REDIRECT is defined, so the redirection is not applied even if it is enabled.', 'clean-login' ),
+            );
+        }
+
+        $hiding_plugins = $this->get_active_plugins_by_slug( array(
+            'wps-hide-login', 'rename-wp-login', 'wp-hide-security-enhancer', 'hide-my-wp', 'lockdown-wp-admin',
+            'change-wp-admin-login', 'easy-hide-login', 'theme-my-login',
+        ) );
+        $checks[] = array(
+            'label'  => __( 'Login URL plugins', 'clean-login' ),
+            'status' => empty( $hiding_plugins ) ? 'ok' : 'error',
+            /* translators: %s: comma separated list of plugin names */
+            'text'   => empty( $hiding_plugins ) ? __( 'No plugin that hides, renames or replaces wp-login.php detected.', 'clean-login' ) : sprintf( __( 'These plugins hide, rename or replace wp-login.php and would clash with this redirection: %s. Deactivate them before enabling it.', 'clean-login' ), implode( ', ', $hiding_plugins ) ),
+        );
+
+        $optional_plugins = $this->get_active_plugins_by_slug( array(
+            'better-wp-security', 'all-in-one-wp-security-and-firewall', 'defender-security', 'loginizer', 'perfmatters',
+            'admin-site-enhancements', 'wp-cerber', 'wp-force-login', 'restricted-site-access',
+        ) );
+        if ( ! empty( $optional_plugins ) ) {
+            $checks[] = array(
+                'label'  => __( 'Security plugins', 'clean-login' ),
+                'status' => 'warning',
+                /* translators: %s: comma separated list of plugin names */
+                'text'   => sprintf( __( 'These plugins have options to change the login URL, hide wp-admin or force visitors to log in: %s. Make sure those options are disabled.', 'clean-login' ), implode( ', ', $optional_plugins ) ),
+            );
+        }
+
+        $origins = $this->get_wp_login_hooked_origins();
+        $list = array();
+        foreach ( $origins as $origin => $hooks )
+            $list[] = $origin . ' (' . implode( ', ', $hooks ) . ')';
+
+        $checks[] = array(
+            'label'  => __( 'Login hooks', 'clean-login' ),
+            'status' => empty( $list ) ? 'ok' : 'warning',
+            /* translators: %s: list of plugins or themes with the hooks they use */
+            'text'   => empty( $list ) ? __( 'No other plugin or theme uses the hooks of the login screen or of its URLs while loading the dashboard.', 'clean-login' ) : sprintf( __( 'These plugins or themes also use hooks of the login screen or of its URLs: %s. It is usually harmless, but if one of them hides or redirects wp-login.php, disable that feature.', 'clean-login' ), implode( '; ', $list ) ),
+        );
+
+        return $checks;
+    }
+
+    function get_wp_login_loopback_checks()
+    {
+        $checks = array();
+        $active = self::get_wp_login_redirect_url() !== '';
+        $login_page = CleanLogin_Controller::get_login_url();
+
+        $result = $this->wp_login_loopback( site_url( 'wp-login.php', 'login' ) );
+        if ( $result['error'] !== '' ) {
+            $status = 'warning';
+            /* translators: %s: connection error message */
+            $text = sprintf( __( 'WordPress could not open wp-login.php by itself (%s). Open it in a private window to check it.', 'clean-login' ), $result['error'] );
+        } elseif ( $result['code'] === 200 ) {
+            $status = $active ? 'error' : 'ok';
+            $text = $active ? __( 'wp-login.php is still shown to visitors. A cache of wp-login.php or another plugin is preventing the redirection.', 'clean-login' ) : __( 'wp-login.php is shown normally: no other plugin hides it or redirects it.', 'clean-login' );
+        } elseif ( $result['code'] >= 300 && $result['code'] < 400 ) {
+            $ours = $this->is_url_of_page( $result['location'], $login_page );
+            $status = $ours ? 'ok' : 'error';
+            /* translators: %s: URL wp-login.php redirects to */
+            $text = $ours ? __( 'wp-login.php sends visitors to the Clean Login page.', 'clean-login' ) : sprintf( __( 'wp-login.php already sends visitors to %s, so another plugin or a server rule redirects it. Disable that redirection first.', 'clean-login' ), $result['location'] );
+        } elseif ( in_array( $result['code'], array( 404, 410 ), true ) ) {
+            $status = 'error';
+            /* translators: %d: HTTP status code */
+            $text = sprintf( __( 'wp-login.php answers with HTTP %d to visitors, so another plugin or a security rule hides it. Disable that feature first.', 'clean-login' ), $result['code'] );
+        } else {
+            $status = 'warning';
+            /* translators: %d: HTTP status code */
+            $text = sprintf( __( 'wp-login.php answers with HTTP %d to WordPress itself (the server may protect it with a password or block requests from the server itself). Open it in a private window to check it.', 'clean-login' ), $result['code'] );
+        }
+        $checks[] = array( 'label' => 'wp-login.php', 'status' => $status, 'text' => $text );
+
+        $result = $this->wp_login_loopback( admin_url() );
+        if ( $result['error'] !== '' ) {
+            $status = 'warning';
+            /* translators: %s: connection error message */
+            $text = sprintf( __( 'WordPress could not open wp-admin by itself (%s). Open it in a private window to check it.', 'clean-login' ), $result['error'] );
+        } elseif ( $result['code'] >= 300 && $result['code'] < 400 && ( strpos( $result['location'], 'wp-login.php' ) !== false || $this->is_url_of_page( $result['location'], $login_page ) ) ) {
+            $status = 'ok';
+            $text = __( 'wp-admin sends visitors to the login screen.', 'clean-login' );
+        } elseif ( $result['code'] >= 300 && $result['code'] < 400 ) {
+            $status = 'warning';
+            /* translators: %s: URL wp-admin redirects to */
+            $text = sprintf( __( 'wp-admin sends visitors to %s instead of the login screen, so another plugin or a server rule redirects it. Visitors opening wp-admin will not reach the Clean Login page.', 'clean-login' ), $result['location'] );
+        } else {
+            $status = 'warning';
+            /* translators: %d: HTTP status code */
+            $text = sprintf( __( 'wp-admin answers with HTTP %d to visitors, so another plugin or a security rule hides it. Visitors opening wp-admin will not reach the Clean Login page.', 'clean-login' ), $result['code'] );
+        }
+        $checks[] = array( 'label' => 'wp-admin', 'status' => $status, 'text' => $text );
+
+        if ( $login_page !== '' ) {
+            $result = $this->wp_login_loopback( $login_page );
+            if ( $result['error'] !== '' ) {
+                $status = 'warning';
+                /* translators: %s: connection error message */
+                $text = sprintf( __( 'WordPress could not open the login page by itself (%s). Open it in a private window to check it.', 'clean-login' ), $result['error'] );
+            } elseif ( $result['code'] !== 200 ) {
+                $status = 'error';
+                /* translators: %d: HTTP status code */
+                $text = sprintf( __( 'The login page answers with HTTP %d to visitors, so nobody could log in with it.', 'clean-login' ), $result['code'] );
+            } elseif ( strpos( $result['body'], 'cleanlogin-form' ) === false ) {
+                $status = 'warning';
+                $text = __( 'The login page loads but the login form was not found in it (a cached copy, a page builder or a membership plugin may be hiding it). Check it in a private window.', 'clean-login' );
+            } else {
+                $status = 'ok';
+                $text = __( 'The login page shows the login form to visitors.', 'clean-login' );
+            }
+            $checks[] = array( 'label' => __( 'Login form', 'clean-login' ), 'status' => $status, 'text' => $text );
+        }
+
+        return $checks;
+    }
+
+    function run_wp_login_checks()
+    {
+        $checks = array_merge( $this->get_wp_login_static_checks(), $this->get_wp_login_loopback_checks() );
+        set_transient( 'cl_wp_login_check_' . get_current_user_id(), $checks, 10 * MINUTE_IN_SECONDS );
+
+        return $checks;
+    }
+
+    function has_error_check( $checks )
+    {
+        foreach ( $checks as $check ) {
+            if ( $check['status'] === 'error' )
+                return true;
+        }
+
+        return false;
+    }
+
+    function wp_login_check_action()
+    {
+        if ( ! current_user_can( apply_filters( 'clean_login_admin_capability', 'manage_options' ) ) )
+            wp_die( esc_html__( 'Admin area', 'clean-login' ) );
+
+        check_admin_referer( 'clean_login_wp_login_check' );
+
+        $this->run_wp_login_checks();
+
+        wp_safe_redirect( admin_url( 'options-general.php?page=clean_login_menu#cl-wp-login-diagnostics' ) );
+        exit;
+    }
+
+    function render_checks_table( $checks )
+    {
+        ?>
+        <table class="widefat striped">
+            <tbody>
+                <?php foreach ( $checks as $check ) : ?>
+                    <tr>
+                        <td style="width:30px;"><?php $this->render_gcaptcha_status_icon( $check['status'] ); ?></td>
+                        <td style="width:160px;"><strong><?php echo esc_html( $check['label'] ); ?></strong></td>
+                        <td><?php echo esc_html( $check['text'] ); ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+        <?php
+    }
+
+    function render_wp_login_diagnostics()
+    {
+        $checks = get_transient( 'cl_wp_login_check_' . get_current_user_id() );
+        if ( $checks !== false )
+            delete_transient( 'cl_wp_login_check_' . get_current_user_id() );
+        ?>
+        <hr>
+        <h2 id="cl-wp-login-diagnostics"><?php echo esc_html__( 'Login page redirection checks', 'clean-login' ); ?></h2>
+        <p><?php echo esc_html__( 'These checks look for plugins, themes or server rules that also hide or redirect wp-login.php and wp-admin. They run automatically when the redirection is enabled, and it is not enabled while any of them fails.', 'clean-login' ); ?></p>
+        <?php
+        if ( $checks !== false ) {
+            $this->render_checks_table( $checks );
+        } else {
+            $this->render_checks_table( $this->get_wp_login_static_checks() );
+            echo '<p class="description">' . esc_html__( 'Run all the checks to also open wp-login.php, wp-admin and the login page as a visitor would.', 'clean-login' ) . '</p>';
+        }
+        ?>
+        <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+            <input type="hidden" name="action" value="clean_login_wp_login_check">
+            <?php wp_nonce_field( 'clean_login_wp_login_check' ); ?>
+            <p><input type="submit" class="button" value="<?php echo esc_attr__( 'Run all the checks', 'clean-login' ); ?>"></p>
+        </form>
+        <?php
+    }
+
     function render_donation_box()
     {
 ?>
@@ -364,6 +782,7 @@ class CleanLogin_Settings
         <h2><?php echo esc_html__('Clean Login status', 'clean-login'); ?></h2>
 
         <p><?php echo esc_html__('Below you can check the plugin status regarding the shortcodes usage and the pages/posts which contain  it.', 'clean-login'); ?></p>
+        <p><?php echo esc_html__('Each shortcode is also available as a block in the "Clean Login" category of the block editor, and pages using the blocks are detected in the same way.', 'clean-login'); ?></p>
 
         <table class="widefat importers">
             <tbody>
@@ -432,6 +851,13 @@ class CleanLogin_Settings
         update_option( 'cl_adminbar', isset( $post['adminbar'] ) );
         update_option( 'cl_adminbar_roles', isset( $post['adminbar_roles'] ) ? array_map( 'sanitize_text_field', (array) $post['adminbar_roles'] ) : array() );
         update_option( 'cl_dashboard', isset( $post['dashboard'] ) );
+        $wp_login_redirect = isset( $post['wp_login_redirect'] );
+        $wp_login_redirect_blocked = false;
+        if ( $wp_login_redirect && ! get_option( 'cl_wp_login_redirect' ) ) {
+            $wp_login_redirect_blocked = $this->has_error_check( $this->run_wp_login_checks() );
+            $wp_login_redirect = ! $wp_login_redirect_blocked;
+        }
+        update_option( 'cl_wp_login_redirect', $wp_login_redirect );
         update_option( 'cl_antispam', isset( $post['antispam'] ) );
         update_option( 'cl_gcaptcha', isset( $post['gcaptcha'] ) );
         update_option( 'cl_gcaptcha_sitekey', isset( $post['gcaptcha_sitekey'] ) ? sanitize_text_field( $post['gcaptcha_sitekey'] ) : '' );
@@ -466,6 +892,9 @@ class CleanLogin_Settings
         update_option( 'cl_lost_password_text', isset( $post['lost_password_text'] ) ? sanitize_text_field( $post['lost_password_text'] ) : '' );
 
         echo '<div class="updated"><p><strong>' . esc_html__( 'Settings saved.', 'clean-login' ) . '</strong></p></div>';
+
+        if ( $wp_login_redirect_blocked )
+            echo '<div class="error"><p>' . wp_kses_post( __( 'The login page redirection has <strong>not</strong> been enabled because some checks failed. See the <a href="#cl-wp-login-diagnostics">login page redirection checks</a> below.', 'clean-login' ) ) . '</p></div>';
     }
 
     function render()
@@ -487,6 +916,7 @@ class CleanLogin_Settings
             $adminbar = get_option('cl_adminbar', true);
             $adminbar_roles = is_array( get_option('cl_adminbar_roles', true) ) ? get_option('cl_adminbar_roles', true) : array();
             $dashboard = get_option('cl_dashboard');
+            $wp_login_redirect = get_option('cl_wp_login_redirect');
             $antispam = get_option('cl_antispam');
             $gcaptcha = get_option('cl_gcaptcha');
             $gcaptcha_sitekey = get_option('cl_gcaptcha_sitekey');
@@ -543,6 +973,18 @@ class CleanLogin_Settings
                             <td>
                                 <label><input name="dashboard" type="checkbox" id="dashboard" <?php checked($dashboard); ?>><?php echo esc_html__('Disable dashboard access for non-admin users?', 'clean-login'); ?></label>
                                 <p class="description"><?php echo wp_kses_post( __( 'Please note that you can only log in through <strong>wp-login.php</strong> and this plugin. <strong>wp-admin</strong> permalink will be inaccessible.', 'clean-login' ) ); ?></p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><?php echo esc_html__('Login page redirection', 'clean-login'); ?></th>
+                            <td>
+                                <label><input name="wp_login_redirect" type="checkbox" id="wp_login_redirect" <?php checked($wp_login_redirect); ?>><?php echo esc_html__('Send visitors who open wp-login.php or wp-admin without being logged in to the Clean Login page?', 'clean-login'); ?></label>
+                                <p class="description"><?php echo wp_kses_post( __( 'The register and lost password links of wp-login.php also go to the [clean-login-register] and [clean-login-restore] pages when they exist (registration only when "Anyone can register" is enabled; in a multisite network the network registration of wp-signup.php is kept otherwise). Logout, password reset links, password protected posts and the "session expired" box of the dashboard keep using <strong>wp-login.php</strong>, and forms sent to it keep working.', 'clean-login' ) ); ?></p>
+                                <p class="description"><?php echo wp_kses_post( __( '<strong>Before logging out</strong>, open the login page in a private window and check that you can log in with it. If you get locked out, add <code>define( \'CLEAN_LOGIN_DISABLE_LOGIN_REDIRECT\', true );</code> to wp-config.php to disable this redirection, or deactivate the plugin via FTP.', 'clean-login' ) ); ?></p>
+                                <p class="description"><?php echo wp_kses_post( __( 'When you enable it, the <a href="#cl-wp-login-diagnostics">login page redirection checks</a> are run first, and it is not enabled if another plugin or a server rule already hides or redirects wp-login.php.', 'clean-login' ) ); ?></p>
+                                <?php if ( $wp_login_redirect && self::get_wp_login_redirect_url() === '' && ! self::is_wp_login_redirect_disabled_by_constant() ) : ?>
+                                    <p class="description" style="color:#b32d2e;"><?php echo esc_html__( 'There is no published page with the Login form block or the [clean-login] shortcode, so the redirection is not applied.', 'clean-login' ); ?></p>
+                                <?php endif; ?>
                             </td>
                         </tr>
                         <tr>
@@ -693,6 +1135,8 @@ class CleanLogin_Settings
 
                 <p class="submit"><input type="submit" name="Submit" class="button-primary" value="<?php echo esc_attr__('Save Changes', 'clean-login'); ?>" /></p>
             </form>
+
+            <?php $this->render_wp_login_diagnostics(); ?>
 
             <?php $this->render_gcaptcha_diagnostics(); ?>
 

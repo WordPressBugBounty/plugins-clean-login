@@ -1,0 +1,19 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "clean-login/change-password",
+	"title": "Change password form",
+	"category": "clean-login",
+	"icon": "admin-network",
+	"description": "Form for logged in users to set a new password, with a strength meter. Same as [clean-login-change-password].",
+	"keywords": [
+		"login",
+		"clean login"
+	],
+	"textdomain": "clean-login",
+	"supports": {
+		"html": false
+	},
+	"editorScript": "clean-login-blocks",
+	"style": "clean-login-css"
+}

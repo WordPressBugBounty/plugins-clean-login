@@ -1,0 +1,19 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "clean-login/logout",
+	"title": "Logout link",
+	"category": "clean-login",
+	"icon": "exit",
+	"description": "Logout link, only shown to logged in users. Same as [clean-login-logout].",
+	"keywords": [
+		"login",
+		"clean login"
+	],
+	"textdomain": "clean-login",
+	"supports": {
+		"html": false
+	},
+	"editorScript": "clean-login-blocks",
+	"style": "clean-login-css"
+}

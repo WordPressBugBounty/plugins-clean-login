@@ -1,0 +1,19 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "clean-login/restore",
+	"title": "Restore password form",
+	"category": "clean-login",
+	"icon": "unlock",
+	"description": "Lost password form that sends an email with a link to set a new password. Same as [clean-login-restore].",
+	"keywords": [
+		"login",
+		"clean login"
+	],
+	"textdomain": "clean-login",
+	"supports": {
+		"html": false
+	},
+	"editorScript": "clean-login-blocks",
+	"style": "clean-login-css"
+}

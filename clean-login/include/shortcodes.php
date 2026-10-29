@@ -13,14 +13,37 @@ class CleanLogin_Shortcode{
 
 		add_action( 'save_post', array( $this, 'get_pages_with_shortcodes' ), 10, 1 );
 		add_action( 'wp_trash_post', array( $this, 'maybe_delete_page_with_shortcodes' ), 10, 1 );
+		add_action( 'before_delete_post', array( $this, 'maybe_delete_page_with_shortcodes' ), 10, 1 );
 	}
+
+    static function get_blocks(){
+        return array(
+            'clean-login'                 => 'clean-login/login',
+            'clean-login-edit'            => 'clean-login/edit',
+            'clean-login-register'        => 'clean-login/register',
+            'clean-login-restore'         => 'clean-login/restore',
+            'clean-login-change-password' => 'clean-login/change-password',
+            'clean-login-logout'          => 'clean-login/logout',
+        );
+    }
+
+    static function has_form( $content, $shortcode ){
+        $blocks = self::get_blocks();
+
+        if( has_shortcode( $content, $shortcode ) )
+            return true;
+
+        return isset( $blocks[ $shortcode ] ) && function_exists( 'has_block' ) && has_block( $blocks[ $shortcode ], $content );
+    }
 
     static function has_clean_login(){
         global $post;
 
-        $shortcodes = array( 'clean-login', 'clean-login-edit', 'clean-login-register', 'clean-login-restore', 'clean-login-change-password', 'clean-login-logout' );
-        foreach( $shortcodes as $shortcode ){
-            if( is_a( $post, 'WP_Post' ) && has_shortcode( $post->post_content, $shortcode ) )
+        if( !is_a( $post, 'WP_Post' ) )
+            return false;
+
+        foreach( array_keys( self::get_blocks() ) as $shortcode ){
+            if( self::has_form( $post->post_content, $shortcode ) )
                 return true;
         }
 
@@ -103,10 +126,8 @@ class CleanLogin_Shortcode{
 	}
 	
 	function clean_login_register( $atts ){
-		if( !get_option( 'users_can_register' ) ){
-			echo "<div class='cleanlogin-notification error'><p>". esc_html__( 'Registration is not allowed in this site', 'clean-login' ) ."</p></div>";
-			return;
-		}
+		if( !get_option( 'users_can_register' ) )
+			return "<div class='cleanlogin-notification error'><p>". esc_html__( 'Registration is not allowed in this site', 'clean-login' ) ."</p></div>";
 		
 		$param = shortcode_atts( array(
 			'role' => false,
@@ -256,7 +277,7 @@ class CleanLogin_Shortcode{
 			return;
 
 		$post = get_post( $post_id );
-		if( !$post || 'trash' == $post->post_status )
+		if( !$post || 'trash' == $post->post_status || !is_post_type_viewable( $post->post_type ) )
 			return;
 
 		$keys = array( 'login' => 'clean-login', 'edit' => 'clean-login-edit', 'register' => 'clean-login-register', 'restore' => 'clean-login-restore', 'change_password' => 'clean-login-change-password' );
@@ -271,34 +292,34 @@ class CleanLogin_Shortcode{
 			return;
 		}
 	
-		if( has_shortcode( $post->post_content, 'clean-login' ) ) {
+		if( self::has_form( $post->post_content, 'clean-login' ) ) {
 			update_option( 'cl_login_url', get_permalink( $post->ID ) );
 			update_option( 'cl_login_id', $post->ID );
 		}
 	
-		if( has_shortcode( $post->post_content, 'clean-login-edit' ) ) {
+		if( self::has_form( $post->post_content, 'clean-login-edit' ) ) {
 			update_option( 'cl_edit_url', get_permalink( $post->ID ) );
 			update_option( 'cl_edit_id', $post->ID );
 		}
 	
-		if( has_shortcode( $post->post_content, 'clean-login-register' ) ) {
+		if( self::has_form( $post->post_content, 'clean-login-register' ) ) {
 			update_option( 'cl_register_url', get_permalink( $post->ID ) );
 			update_option( 'cl_register_id', $post->ID );
 		}
 	
-		if( has_shortcode( $post->post_content, 'clean-login-restore' ) ) {
+		if( self::has_form( $post->post_content, 'clean-login-restore' ) ) {
 			update_option( 'cl_restore_url', get_permalink( $post->ID ) );
 			update_option( 'cl_restore_id', $post->ID );
 		}
 
-		if( has_shortcode( $post->post_content, 'clean-login-change-password' ) ) {
+		if( self::has_form( $post->post_content, 'clean-login-change-password' ) ) {
 			update_option( 'cl_change_password_url', get_permalink( $post->ID ) );
 			update_option( 'cl_change_password_id', $post->ID );
 		}
 
 		// delete if not used
 		foreach ( $keys as $key => $shortcode ) {
-			if( $post_id == get_option( 'cl_' . $key . '_id' ) && !has_shortcode( $post->post_content, $shortcode ) ){
+			if( $post_id == get_option( 'cl_' . $key . '_id' ) && !self::has_form( $post->post_content, $shortcode ) ){
 				delete_option( 'cl_' . $key . '_url' );
 				delete_option( 'cl_' . $key . '_id' );
 			}
