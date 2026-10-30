@@ -4,7 +4,7 @@ Donate link: https://codection.com/?post_type=surl&p=8712&preview=true
 Tags: login, registration, custom login page, password reset, user profile
 Requires at least: 5.5
 Tested up to: 7.1
-Stable tag: 2.0
+Stable tag: 2.0.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -58,6 +58,12 @@ Every form is also available as a **block** in the "Clean Login" category of the
 *   Override any template from your theme (`theme/clean-login/` folder)
 *   AJAX compatible
 
+### More plugins by Codection
+
+*   [Import and export users and customers](https://wordpress.org/plugins/import-users-from-csv-with-meta/) (free): create or update all your users at once from a CSV file and export them whenever you need. Its premium addons add [scheduled imports](https://import-wp.com/plugins/recurring-import-addon/?utm_source=wordpress.org&utm_medium=clean-login&utm_campaign=readme), [scheduled exports](https://import-wp.com/plugins/recurring-export-addon/?utm_source=wordpress.org&utm_medium=clean-login&utm_campaign=readme) and [users without email](https://import-wp.com/plugins/allow-no-email-addon/?utm_source=wordpress.org&utm_medium=clean-login&utm_campaign=readme)
+*   [Payment Schedule for WooCommerce Subscriptions](https://import-wp.com/plugins/payment-schedule-for-woocommerce-subscriptions/?utm_source=wordpress.org&utm_medium=clean-login&utm_campaign=readme): show your customers when every payment of their subscription will be charged
+*   Selling in Spain? [RedSys, Bizum and Ceca payment gateways](https://codection.com/?utm_source=wordpress.org&utm_medium=clean-login&utm_campaign=readme) for WooCommerce, Paid Memberships Pro, GiveWP, Event Tickets, Tickera, Contact Form 7, Gravity Forms, WPForms, Ninja Forms, Elementor Pro and Easy Digital Downloads
+
 == Usage and Settings ==
 
 Please, refer to [Installation section](https://wordpress.org/plugins/clean-login/installation/)
@@ -81,6 +87,12 @@ Please, refer to [Installation section](https://wordpress.org/plugins/clean-logi
 15. Login page redirection checks
 
 == Changelog ==
+
+= 2.0.1 - 2026-10-30 =
+*   New "More plugins by Codection" section in the plugin description
+*   The settings screen shows a box with our related plugins: the RedSys, Bizum and Ceca gateways for the plugins active on the site (WooCommerce, Paid Memberships Pro, GiveWP, forms, tickets…) on sites in Spanish, Catalan, Galician or Basque or with a WooCommerce store based in Spain, and the users import and export plugin and its addons on the rest
+*   Fewer links in the plugin row of the Plugins screen: only one link to our other plugins, the gateways in Spain and the premium addons elsewhere
+*   Links to our other plugins now include campaign parameters to know which ones are useful
 
 = 2.0 - 2026-10-28 =
 *   New: optional redirection of wp-login.php (and of wp-admin for visitors who are not logged in) to the [clean-login] page, in Settings → Clean Login → Login page redirection. The register and lost password screens go to the [clean-login-register] and [clean-login-restore] pages when they exist (registration only when "Anyone can register" is enabled, so in multisite the network registration of wp-signup.php is kept unless the site enables it), and the page the visitor wanted to open is kept so they get there after logging in. Logout, password reset links, password protected posts, the "session expired" box and any form sent to wp-login.php keep working as usual. It is only applied while the login page is published, and it can be turned off from wp-config.php with `define( 'CLEAN_LOGIN_DISABLE_LOGIN_REDIRECT', true );` in case of lockout. In multisite it is set per site, and the constant disables it in the whole network

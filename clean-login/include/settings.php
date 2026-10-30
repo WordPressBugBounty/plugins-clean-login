@@ -908,6 +908,7 @@ class CleanLogin_Settings
     ?>
         <div class="wrap">
             <?php $this->render_donation_box(); ?>
+            <?php add_thickbox(); CleanLogin_CrossSell::render_card(); ?>
             <br />
             <?php $this->render_used_shortcode_table(); ?>
             <h2><?php echo esc_html__('Options', 'clean-login'); ?></h2>
