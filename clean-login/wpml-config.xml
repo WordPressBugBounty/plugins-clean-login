@@ -1,0 +1,15 @@
+<wpml-config>
+	<admin-texts>
+		<key name="cl_lost_password_text" />
+		<key name="cl_termsconditionsMSG" />
+		<key name="cl_emailnotificationcontent" />
+	</admin-texts>
+	<shortcodes>
+		<shortcode>
+			<tag>clean-login-logout</tag>
+			<attributes>
+				<attribute>text</attribute>
+			</attributes>
+		</shortcode>
+	</shortcodes>
+</wpml-config>

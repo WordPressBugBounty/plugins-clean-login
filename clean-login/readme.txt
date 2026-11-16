@@ -4,7 +4,7 @@ Donate link: https://codection.com/?post_type=surl&p=8712&preview=true
 Tags: login, registration, custom login page, password reset, user profile
 Requires at least: 5.5
 Tested up to: 7.1
-Stable tag: 2.0.1
+Stable tag: 2.0.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -87,6 +87,13 @@ Please, refer to [Installation section](https://wordpress.org/plugins/clean-logi
 15. Login page redirection checks
 
 == Changelog ==
+
+= 2.0.2 - 2026-11-16 =
+*   WPML: new wpml-config.xml, so the "Lost password?" link text, the terms and conditions text and the new user email text of Settings → Clean Login can be translated in WPML → String Translation, and the text of [clean-login-logout] is sent to translation
+*   Fixed: with WPML, a redirect target that is not a post or a page (the home page, which is the default, an archive or an external URL) took the visitor to the wrong page, and logging out from the admin bar showed a blank page. Now the URL is translated to the visitor's language, and the logout goes to the home page if there is no URL
+*   Fixed: with WPML, the Clean Login widget linked the pages of one language on every language
+*   Fixed: with WPML, moving one translation of a form page to the trash or unpublishing it removed the links to that form in every language. Now another published translation is used
+*   Thanks to the WPML compatibility team for the report
 
 = 2.0.1 - 2026-10-30 =
 *   New "More plugins by Codection" section in the plugin description
@@ -668,7 +675,7 @@ Yes. Enable "Use Email as Username" in the plugin settings.
 Yes. Login, registration and all other plugin pages are automatically marked `noindex, nofollow` and excluded from the WordPress sitemap, so they never pollute your site's search rankings. Compatible with Yoast SEO, RankMath and AIOSEO.
 
 = Is Clean Login compatible with WPML? =
-Yes — Clean Login holds an [official WPML certification](http://wpml.org/plugin/clean-login/).
+Yes — Clean Login holds an [official WPML certification](http://wpml.org/plugin/clean-login/). The forms and blocks follow the visitor's language, and the texts typed in Settings → Clean Login are translated in WPML → String Translation (WPML String Translation is needed for them).
 
 = Is Clean Login compatible with WooCommerce? =
 Yes, Clean Login works alongside WooCommerce without conflicts.

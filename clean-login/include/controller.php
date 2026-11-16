@@ -589,13 +589,20 @@ class CleanLogin_Controller{
 
     static function get_translated_option_page( $page, $param = false) {
         $url = get_option( $page, $param );
-     
-        if( !function_exists( 'icl_object_id' )) {
+
+        if( empty( $url ) || !function_exists( 'icl_object_id' ) )
             return $url;
-        } else {
-            $pid = url_to_postid( $url );
-            return get_permalink( icl_object_id( $pid, 'page', true, ICL_LANGUAGE_CODE ) );
-        }
+
+        $language = apply_filters( 'wpml_current_language', null );
+        $pid = url_to_postid( $url );
+
+        if( empty( $pid ) )
+            return apply_filters( 'wpml_permalink', $url, $language );
+
+        $translated_id = apply_filters( 'wpml_object_id', $pid, get_post_type( $pid ), true, $language );
+        $permalink = empty( $translated_id ) ? false : get_permalink( $translated_id );
+
+        return empty( $permalink ) ? $url : $permalink;
     }
 
     static function get_login_url(){

@@ -280,14 +280,12 @@ class CleanLogin_Shortcode{
 		if( !$post || 'trash' == $post->post_status || !is_post_type_viewable( $post->post_type ) )
 			return;
 
-		$keys = array( 'login' => 'clean-login', 'edit' => 'clean-login-edit', 'register' => 'clean-login-register', 'restore' => 'clean-login-restore', 'change_password' => 'clean-login-change-password' );
+		$keys = self::form_shortcodes();
 
 		if( 'publish' != $post->post_status ) {
 			foreach ( $keys as $key => $shortcode ) {
-				if( $post_id == get_option( 'cl_' . $key . '_id' ) ){
-					delete_option( 'cl_' . $key . '_url' );
-					delete_option( 'cl_' . $key . '_id' );
-				}
+				if( $post_id == get_option( 'cl_' . $key . '_id' ) )
+					self::release_form_page( $key, $shortcode, $post_id );
 			}
 			return;
 		}
@@ -319,37 +317,63 @@ class CleanLogin_Shortcode{
 
 		// delete if not used
 		foreach ( $keys as $key => $shortcode ) {
-			if( $post_id == get_option( 'cl_' . $key . '_id' ) && !self::has_form( $post->post_content, $shortcode ) ){
-				delete_option( 'cl_' . $key . '_url' );
-				delete_option( 'cl_' . $key . '_id' );
-			}
+			if( $post_id == get_option( 'cl_' . $key . '_id' ) && !self::has_form( $post->post_content, $shortcode ) )
+				self::release_form_page( $key, $shortcode, $post_id );
 		}
 	}
 	
 	function maybe_delete_page_with_shortcodes( int $post_id ){
-		if( $post_id == get_option( 'cl_login_id' ) ){
-			delete_option( 'cl_login_url' );
-			delete_option( 'cl_login_id' );
+		foreach ( self::form_shortcodes() as $key => $shortcode ) {
+			if( $post_id == get_option( 'cl_' . $key . '_id' ) )
+				self::release_form_page( $key, $shortcode, $post_id );
+		}
+	}
+
+	static function form_shortcodes(){
+		return array( 'login' => 'clean-login', 'edit' => 'clean-login-edit', 'register' => 'clean-login-register', 'restore' => 'clean-login-restore', 'change_password' => 'clean-login-change-password' );
+	}
+
+	static function release_form_page( $key, $shortcode, $post_id ){
+		$translation_id = self::get_published_translation( $post_id, $shortcode );
+
+		if( empty( $translation_id ) ){
+			delete_option( 'cl_' . $key . '_url' );
+			delete_option( 'cl_' . $key . '_id' );
+			return;
 		}
 
-		if( $post_id == get_option( 'cl_edit_id' ) ){
-			delete_option( 'cl_edit_url' );
-			delete_option( 'cl_edit_id' );
+		update_option( 'cl_' . $key . '_url', get_permalink( $translation_id ) );
+		update_option( 'cl_' . $key . '_id', $translation_id );
+	}
+
+	static function get_published_translation( $post_id, $shortcode ){
+		if( !function_exists( 'icl_object_id' ) )
+			return 0;
+
+		$element_type = apply_filters( 'wpml_element_type', get_post_type( $post_id ) );
+		$trid = apply_filters( 'wpml_element_trid', null, $post_id, $element_type );
+		if( empty( $trid ) )
+			return 0;
+
+		$translations = apply_filters( 'wpml_get_element_translations', null, $trid, $element_type );
+		if( empty( $translations ) || !is_array( $translations ) )
+			return 0;
+
+		$default_language = apply_filters( 'wpml_default_language', null );
+		if( isset( $translations[ $default_language ] ) )
+			$translations = array( $default_language => $translations[ $default_language ] ) + $translations;
+
+		foreach( $translations as $translation ){
+			$translation_id = isset( $translation->element_id ) ? (int) $translation->element_id : 0;
+			if( empty( $translation_id ) || $translation_id == $post_id )
+				continue;
+
+			$translation_post = get_post( $translation_id );
+			if( $translation_post && 'publish' == $translation_post->post_status && self::has_form( $translation_post->post_content, $shortcode ) )
+				return $translation_id;
 		}
 
-		if( $post_id == get_option( 'cl_register_id' ) ){
-			delete_option( 'cl_register_url' );
-			delete_option( 'cl_register_id' );
-		}
-
-		if( $post_id == get_option( 'cl_restore_id' ) ){
-			delete_option( 'cl_restore_url' );
-			delete_option( 'cl_restore_id' );
-		}
-
-		if( $post_id == get_option( 'cl_change_password_id' ) ){
-			delete_option( 'cl_change_password_url' );
-			delete_option( 'cl_change_password_id' );
-		}
-	}	
+		return 0;
+	}
+	
 }

@@ -32,10 +32,10 @@ class CleanLogin_WPWidget extends WP_Widget {
 		if ( ! empty( $title ) )
 			echo wp_kses_post( $args['before_title'] . $title . $args['after_title'] );
 
-		$login_url = get_option( 'cl_login_url', '');
-		$edit_url = get_option( 'cl_edit_url', '');
-		$register_url = get_option( 'cl_register_url', '');
-		$restore_url = get_option( 'cl_restore_url', '');
+		$login_url = CleanLogin_Controller::get_login_url();
+		$edit_url = CleanLogin_Controller::get_edit_url();
+		$register_url = CleanLogin_Controller::get_register_url();
+		$restore_url = CleanLogin_Controller::get_restore_password_url();
 
 		if ( is_user_logged_in() ) {
 			$current_user = wp_get_current_user();
@@ -52,7 +52,7 @@ class CleanLogin_WPWidget extends WP_Widget {
 				echo "<li><a href='" . esc_url( $edit_url ) . "'>" . esc_html__( 'Edit my profile', 'clean-login') . "</a></li>";
 
 			if ( $login_url != '' )
-				echo "<li><a href='" . esc_url( $login_url ) . "?action=logout'>" . esc_html__( 'Logout', 'clean-login') . "</a></li>";
+				echo "<li><a href='" . esc_url( add_query_arg( 'action', 'logout', $login_url ) ) . "'>" . esc_html__( 'Logout', 'clean-login') . "</a></li>";
 
 			if ( $edit_url != '' || $login_url != '' ) echo "</ul>";
 
