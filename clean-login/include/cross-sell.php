@@ -74,15 +74,36 @@ class CleanLogin_CrossSell{
 				'desc' => __( 'Schedule automatic exports of your users and customers.', 'clean-login' ),
 			);
 		}
-		elseif ( current_user_can( 'install_plugins' ) ) {
-			$addons[] = array(
-				'name' => 'Import and export users and customers',
-				'url'  => admin_url( 'plugin-install.php?tab=plugin-information&plugin=import-users-from-csv-with-meta&TB_iframe=true&width=772&height=700' ),
-				'desc' => __( 'Free plugin by the same team: create or update all your users at once from a CSV file, and export them whenever you need.', 'clean-login' ),
-			);
-		}
 
 		return $addons;
+	}
+
+	static function render_users_line(){
+		if ( defined( 'ACUI_VERSION' ) ) {
+			if ( ! current_user_can( apply_filters( 'acui_capability', 'create_users' ) ) )
+				return;
+
+			printf(
+				'<p class="description">%s <a href="%s">%s</a> · <a href="%s">%s</a></p>',
+				esc_html__( 'Your users:', 'clean-login' ),
+				esc_url( admin_url( 'tools.php?page=acui&tab=homepage' ) ),
+				esc_html__( 'import a list of users', 'clean-login' ),
+				esc_url( admin_url( 'tools.php?page=acui&tab=export' ) ),
+				esc_html__( 'export the users who registered', 'clean-login' )
+			);
+			return;
+		}
+
+		if ( ! current_user_can( 'install_plugins' ) )
+			return;
+
+		printf(
+			'<p class="description">%s <a href="%s" class="thickbox open-plugin-details-modal">%s</a>%s</p>',
+			esc_html__( 'Do you already have a list of users, or do you want to export the ones who register to a spreadsheet?', 'clean-login' ),
+			esc_url( admin_url( 'plugin-install.php?tab=plugin-information&plugin=import-users-from-csv-with-meta&TB_iframe=true&width=772&height=700' ) ),
+			esc_html__( 'Import and export users and customers', 'clean-login' ),
+			esc_html__( ', our free plugin, does both.', 'clean-login' )
+		);
 	}
 
 	static function plugin_row_link(){

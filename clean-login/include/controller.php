@@ -86,7 +86,7 @@ class CleanLogin_Controller{
                         $url = add_query_arg( 'authentication', 'disabled', $error_url );
                     }
                     else {
-                        $url = get_option( 'cl_login_redirect', false) ? esc_url( apply_filters('clean_login_login_redirect_url', CleanLogin_Controller::get_translated_option_page('cl_login_redirect_url'), $user)): esc_url( add_query_arg( 'authentication', 'success', $url ) );
+                        $url = get_option( 'cl_login_redirect', false) ? esc_url_raw( apply_filters('clean_login_login_redirect_url', CleanLogin_Controller::get_translated_option_page('cl_login_redirect_url'), $user)): esc_url_raw( add_query_arg( 'authentication', 'success', $url ) );
 
                         if( !empty( $_REQUEST['clean_login_redirect'] ) )
                             $url = esc_url_raw( wp_unslash( $_REQUEST['clean_login_redirect'] ) );
@@ -101,17 +101,17 @@ class CleanLogin_Controller{
         // LOGOUT
         } else if ( $cleanlogin_action == 'logout' ) {
             wp_logout();
-            $url = esc_url( add_query_arg( 'authentication', 'logout', $url ) );
+            $url = esc_url_raw( add_query_arg( 'authentication', 'logout', $url ) );
             
             wp_safe_redirect( $url );
 
         // EDIT profile
         } else if ( $cleanlogin_action == 'edit' ) {
             if ( ! $cleanlogin_has_verified_nonce ) {
-                wp_safe_redirect( esc_url( add_query_arg( 'updated', 'failed', $url ) ) );
+                wp_safe_redirect( esc_url_raw( add_query_arg( 'updated', 'failed', $url ) ) );
                 exit();
             }
-            $url = esc_url( add_query_arg( 'updated', 'success', $url ) );
+            $url = esc_url_raw( add_query_arg( 'updated', 'success', $url ) );
             $success_url = $url;
 
             $current_user = wp_get_current_user();
@@ -124,11 +124,11 @@ class CleanLogin_Controller{
 
             $email = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
             if ( ! $email || empty ( $email ) ) {
-                $url = esc_url( add_query_arg( 'updated', 'wrongmail', $url ) );
+                $url = esc_url_raw( add_query_arg( 'updated', 'wrongmail', $url ) );
             } elseif ( ! is_email( $email ) ) {
-                $url = esc_url( add_query_arg( 'updated', 'wrongmail', $url ) );
+                $url = esc_url_raw( add_query_arg( 'updated', 'wrongmail', $url ) );
             } elseif ( ( $email != $current_user->user_email ) && email_exists( $email ) ) {
-                $url = esc_url( add_query_arg( 'updated', 'wrongmail', $url ) );
+                $url = esc_url_raw( add_query_arg( 'updated', 'wrongmail', $url ) );
             } elseif( $email != $current_user->user_email ) {
                 $this->send_confirmation_email( $email );
             }
@@ -141,11 +141,11 @@ class CleanLogin_Controller{
             $pass2 = isset( $_POST['pass2'] ) ? wp_unslash( $_POST['pass2'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
             if ( $pass1 !== '' ) {
                 if ( $pass2 !== $pass1 ) {
-                    $url = esc_url( add_query_arg( 'updated', 'wrongpass', $url ) );
+                    $url = esc_url_raw( add_query_arg( 'updated', 'wrongpass', $url ) );
                 }
                 else {
                     if( $enable_passcomplex && !$this->is_password_complex( $pass1 ) )
-                        $url = esc_url( add_query_arg( 'updated', 'passcomplex', $url ) );
+                        $url = esc_url_raw( add_query_arg( 'updated', 'passcomplex', $url ) );
                     else
                         $userdata['user_pass'] = $pass1;
                 }
@@ -154,7 +154,7 @@ class CleanLogin_Controller{
             $user_id = ( $cleanlogin_has_verified_nonce ) ? wp_update_user( $userdata ) : new WP_Error( 'invalid_nonce', __( 'Invalid NONCE, please try again.', 'clean-login' ) );
             
             if ( is_wp_error( $user_id ) ) {
-                $url = esc_url( add_query_arg( 'updated', 'failed', $url ) );
+                $url = esc_url_raw( add_query_arg( 'updated', 'failed', $url ) );
             } elseif ( isset( $userdata['user_pass'] ) && $url == $success_url ) {
                 $change_password_redirect_url = self::get_url_change_password_redirect();
                 if( $change_password_redirect_url )
@@ -166,7 +166,7 @@ class CleanLogin_Controller{
         // REGISTER a new user
         } else if ( $cleanlogin_action == 'register' ) {
             if ( ! $cleanlogin_has_verified_nonce || ! get_option( 'users_can_register' ) ) {
-                wp_safe_redirect( esc_url( add_query_arg( 'created', 'failed', $url ) ) );
+                wp_safe_redirect( esc_url_raw( add_query_arg( 'created', 'failed', $url ) ) );
                 exit();
             }
             $user = 0;
@@ -187,7 +187,7 @@ class CleanLogin_Controller{
 
             $successful_registration = false;
 
-            $url = esc_url( add_query_arg( 'created', 'success', $url ) );
+            $url = esc_url_raw( add_query_arg( 'created', 'success', $url ) );
 
             //if nameandsurname is checked then get them
             if( $nameandsurname ) {
@@ -227,32 +227,32 @@ class CleanLogin_Controller{
             $terms = isset( $_POST['termsconditions'] ) && !empty( $_POST['termsconditions'] );
             
             if( $termsconditions && !$terms )
-                $url = esc_url( add_query_arg( 'created', 'terms', $url ) );
+                $url = esc_url_raw( add_query_arg( 'created', 'terms', $url ) );
             else if( $enable_passcomplex && !$this->is_password_complex( $pass1 ) )
-                $url = esc_url( add_query_arg( 'created', 'passcomplex', $url ) );
+                $url = esc_url_raw( add_query_arg( 'created', 'passcomplex', $url ) );
             else if ( $create_customrole && !in_array( $role, $newuserroles ) )
-                $url = esc_url( add_query_arg( 'created', 'failed', $url ) );
+                $url = esc_url_raw( add_query_arg( 'created', 'failed', $url ) );
             else if( ( $enable_captcha && ( $captcha_session === '' || ! hash_equals( $captcha_session, $captcha ) ) ) || ( $enable_gcaptcha && !$this->valid_gcaptcha( 'register' ) ) )
-                $url = esc_url( add_query_arg( 'created', 'wrongcaptcha', $url ) );
+                $url = esc_url_raw( add_query_arg( 'created', 'wrongcaptcha', $url ) );
             else if( $website != '.' )
-                $url = esc_url( add_query_arg( 'created', 'created', $url ) );
+                $url = esc_url_raw( add_query_arg( 'created', 'created', $url ) );
             else if( $nameandsurname && $first_name == '' )
-                $url = esc_url( add_query_arg( 'created', 'wrongname', $url ) );
+                $url = esc_url_raw( add_query_arg( 'created', 'wrongname', $url ) );
             else if( $nameandsurname && $last_name == '' )
-                $url = esc_url( add_query_arg( 'created', 'wrongsurname', $url ) );
+                $url = esc_url_raw( add_query_arg( 'created', 'wrongsurname', $url ) );
             else if( $username == '' || username_exists( $username ) )
-                $url = esc_url( add_query_arg( 'created', 'wronguser', $url ) );
+                $url = esc_url_raw( add_query_arg( 'created', 'wronguser', $url ) );
             else if( $email == '' || !is_email( $email ) || apply_filters( 'clean_login_valid_email', false, $email ) )
-                $url = esc_url( add_query_arg( 'created', 'wrongmail', $url ) );
+                $url = esc_url_raw( add_query_arg( 'created', 'wrongmail', $url ) );
             else if ( email_exists( $email ) )
-                $url = esc_url( add_query_arg( 'created', 'emailexists', $url ) );
+                $url = esc_url_raw( add_query_arg( 'created', 'emailexists', $url ) );
             else if ( $pass1 == '' || $pass1 != $pass2)
-                $url = esc_url( add_query_arg( 'created', 'wrongpass', $url ) );
+                $url = esc_url_raw( add_query_arg( 'created', 'wrongpass', $url ) );
             else{
                 $user_id = ( $cleanlogin_has_verified_nonce ) ? wp_create_user( $username, $pass1, $email ) : new WP_Error( 'invalid_nonce', __( 'Invalid NONCE, please try again.', 'clean-login' ) );
                 
                 if ( is_wp_error( $user_id ) )
-                    $url = esc_url( add_query_arg( 'created', 'failed', $url ) );
+                    $url = esc_url_raw( add_query_arg( 'created', 'failed', $url ) );
                 else {
                     $successful_registration = true;
                     $user = new WP_User( $user_id );
@@ -279,10 +279,10 @@ class CleanLogin_Controller{
 
                         if( apply_filters( "clean_login_send_email_validation", true ) ){
                             if( !wp_mail( $email, $subject , $message, array( 'Content-Type: text/html; charset=UTF-8' ) ) )
-                                $url = esc_url( add_query_arg( 'created', 'failed', $url ) );    
+                                $url = esc_url_raw( add_query_arg( 'created', 'failed', $url ) );    
                         }
                     
-                        $url = esc_url( add_query_arg( 'created', 'success-link', $url ) );
+                        $url = esc_url_raw( add_query_arg( 'created', 'success-link', $url ) );
                     }
                     else if( $create_customrole ){
                         $user->set_role( $role );
@@ -317,7 +317,7 @@ class CleanLogin_Controller{
                     
                     if( apply_filters( "clean_login_send_admin_email_notification", true ) ){
                         if( !wp_mail( $adminemail, $subject, $message, array( 'Content-Type: text/html; charset=UTF-8' ) ) ){
-                            $url = esc_url( add_query_arg( 'sent', 'failed', $url ) );
+                            $url = esc_url_raw( add_query_arg( 'sent', 'failed', $url ) );
                         }
                     }
                     
@@ -330,7 +330,7 @@ class CleanLogin_Controller{
                         $emailnotificationcontent = apply_filters( "clean_login_email_notification_content", $emailnotificationcontent);
                         
                         if( !wp_mail( $email, $subject , $emailnotificationcontent, array( 'Content-Type: text/html; charset=UTF-8' ) ) ){
-                            $url = esc_url( add_query_arg( 'sent', 'failed', $url ) );
+                            $url = esc_url_raw( add_query_arg( 'sent', 'failed', $url ) );
                         }
                     }
 
@@ -341,7 +341,7 @@ class CleanLogin_Controller{
             // if automatic login is enabled then log the user in and redirect them, checking if it was successful or not,
             //  is not compatible with email validation feature. This had no meaning!
             if( $automaticlogin && $successful_registration && !$emailvalidation ) {
-                $url = esc_url( CleanLogin_Controller::get_translated_option_page( 'cl_url_redirect' ) );
+                $url = esc_url_raw( CleanLogin_Controller::get_translated_option_page( 'cl_url_redirect' ) );
                 wp_signon( array('user_login' => $username, 'user_password' => $pass1 ), false );
             }
             
@@ -363,10 +363,10 @@ class CleanLogin_Controller{
             $user = get_user_by( 'id', intval( $_GET['activate'] ) );
             
             if ( !$user ) {
-                $url = esc_url( add_query_arg( 'authentication', 'failed-activation', $url ) );
+                $url = esc_url_raw( add_query_arg( 'authentication', 'failed-activation', $url ) );
             } else {
                 $user->set_role( get_option('default_role') );
-                $url = esc_url( add_query_arg( 'authentication', 'success-activation', $url ) );
+                $url = esc_url_raw( add_query_arg( 'authentication', 'success-activation', $url ) );
             }
             
             wp_safe_redirect( $url );
@@ -378,10 +378,10 @@ class CleanLogin_Controller{
                 $url = $this->url_cleaner( $restore_form_url );
 
             if ( ! $cleanlogin_has_verified_nonce ) {
-                wp_safe_redirect( esc_url( add_query_arg( 'sent', 'failed', $url ) ) );
+                wp_safe_redirect( esc_url_raw( add_query_arg( 'sent', 'failed', $url ) ) );
                 exit();
             }
-            $url = esc_url( add_query_arg( 'sent', 'success', $url ) );
+            $url = esc_url_raw( add_query_arg( 'sent', 'success', $url ) );
 
             $username = isset( $_POST['username'] ) ? sanitize_user( wp_unslash( $_POST['username'] ) ) : '';
             $website = isset( $_POST['website'] ) ? sanitize_text_field( wp_unslash( $_POST['website'] ) ) : '';
@@ -397,15 +397,15 @@ class CleanLogin_Controller{
 
             // honeypot detection
             if( $website != '.' )
-                $url = esc_url( add_query_arg( 'sent', 'sent', $url ) );
+                $url = esc_url_raw( add_query_arg( 'sent', 'sent', $url ) );
             else if( $username == '' || !username_exists( $username ) )
-                $url = esc_url( add_query_arg( 'sent', 'wronguser', $url ) );
+                $url = esc_url_raw( add_query_arg( 'sent', 'wronguser', $url ) );
             else {
                 $user = get_user_by( 'login', $username );
 
                 $key = get_password_reset_key( $user );
                 if ( is_wp_error( $key ) ) {
-                    wp_safe_redirect( esc_url( add_query_arg( 'sent', 'failed', $url ) ) );
+                    wp_safe_redirect( esc_url_raw( add_query_arg( 'sent', 'failed', $url ) ) );
                     exit();
                 }
 
@@ -422,7 +422,7 @@ class CleanLogin_Controller{
                 $subject = apply_filters( "clean_login_email_restoration_subject", $subject);
                 
                 if( !wp_mail( $email, $subject , $message, array( 'Content-Type: text/html; charset=UTF-8' ) ) )
-                    $url = esc_url( add_query_arg( 'sent', 'failed', $url ) );
+                    $url = esc_url_raw( add_query_arg( 'sent', 'failed', $url ) );
                 else {
                     $restore_redirect_url = self::get_url_restore_redirect();
                     if( $restore_redirect_url )
@@ -462,7 +462,7 @@ class CleanLogin_Controller{
                 $user_id = wp_update_user( array( 'ID' => $user_id, 'user_pass' => $new_password ) );
 
                 if ( is_wp_error( $user_id ) ) {
-                    $url = esc_url( add_query_arg( 'sent', 'wronguser', $url ) );
+                    $url = esc_url_raw( add_query_arg( 'sent', 'wronguser', $url ) );
                 } else {
                     set_transient( 'cl_temporary_pass_' . $user_id, $new_password );
                     $url = add_query_arg( array( 'pass_changed' => 'true', 'user_id' => $user_id, 'cl_nonce' => wp_create_nonce( 'cl_pass_changed_' . $user_id ) ), $url );
@@ -494,16 +494,16 @@ class CleanLogin_Controller{
                 }
                 wp_update_user( $user );
                 delete_user_meta( $current_user->ID, '_new_email' );
-                wp_safe_redirect( esc_url( add_query_arg( 'updated', 'emailchangedsuccess', CleanLogin_Controller::get_edit_url() ) ) );
+                wp_safe_redirect( esc_url_raw( add_query_arg( 'updated', 'emailchangedsuccess', CleanLogin_Controller::get_edit_url() ) ) );
             } else {
-                wp_safe_redirect( esc_url( add_query_arg( 'updated', 'failed', CleanLogin_Controller::get_edit_url() ) ) );
+                wp_safe_redirect( esc_url_raw( add_query_arg( 'updated', 'failed', CleanLogin_Controller::get_edit_url() ) ) );
             }
         }
     }
 
     function url_cleaner( $url ) {
         $query_args = array( 'authentication', 'updated', 'created', 'sent', 'restore' );
-        return esc_url( remove_query_arg( $query_args, $url ) );
+        return esc_url_raw( remove_query_arg( $query_args, $url ) );
     }
 
     function is_password_complex($candidate) {
@@ -694,21 +694,21 @@ class CleanLogin_Controller{
 		if( get_option('cl_register_redirect', false) == '' )
 			return false;
 	
-		return get_option('cl_register_redirect_url', false) ? esc_url( apply_filters( 'clean_login_register_redirect_url', CleanLogin_Controller::get_translated_option_page('cl_register_redirect_url' ) ) ): false;
+		return get_option('cl_register_redirect_url', false) ? esc_url_raw( apply_filters( 'clean_login_register_redirect_url', CleanLogin_Controller::get_translated_option_page('cl_register_redirect_url' ) ) ): false;
 	}
 
     static function get_url_change_password_redirect(){
 		if( get_option('cl_change_password_redirect', false) == '' )
 			return false;
 	
-		return get_option('cl_change_password_redirect_url', false) ? esc_url( apply_filters( 'clean_login_change_password_redirect_url', CleanLogin_Controller::get_translated_option_page('cl_change_password_redirect_url' ) ) ): false;
+		return get_option('cl_change_password_redirect_url', false) ? esc_url_raw( apply_filters( 'clean_login_change_password_redirect_url', CleanLogin_Controller::get_translated_option_page('cl_change_password_redirect_url' ) ) ): false;
 	}
 
     static function get_url_restore_redirect(){
 		if( get_option('cl_restore_redirect', false) == '' )
 			return false;
 	
-		return get_option('cl_restore_redirect_url', false) ? esc_url( apply_filters( 'clean_login_restore_redirect_url', CleanLogin_Controller::get_translated_option_page('cl_restore_redirect_url' ) ) ): false;
+		return get_option('cl_restore_redirect_url', false) ? esc_url_raw( apply_filters( 'clean_login_restore_redirect_url', CleanLogin_Controller::get_translated_option_page('cl_restore_redirect_url' ) ) ): false;
 	}
 
     function redirect_email_change_to_frontend(){
@@ -719,7 +719,7 @@ class CleanLogin_Controller{
         if( empty( $edit_url ) )
             return;
 
-        wp_safe_redirect( esc_url( add_query_arg( 'newuseremail', sanitize_text_field( wp_unslash( $_GET['newuseremail'] ) ), $edit_url ) ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        wp_safe_redirect( esc_url_raw( add_query_arg( 'newuseremail', sanitize_text_field( wp_unslash( $_GET['newuseremail'] ) ), $edit_url ) ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
         exit;
     }
 

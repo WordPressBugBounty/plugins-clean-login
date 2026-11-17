@@ -145,7 +145,7 @@ class CleanLogin_Captcha {
         imagefilledrectangle($this->im, 0, 0, $this->width*$this->scale, $this->height*$this->scale, $this->GdBgColor);
 
         // Foreground color
-        $color           = $this->colors[wp_rand(0, sizeof($this->colors)-1)];
+        $color           = $this->colors[$this->random(0, sizeof($this->colors)-1)];
         $this->GdFgColor = imagecolorallocate($this->im, $color[0], $color[1], $color[2]);
 
         // Shadow color
@@ -169,6 +169,15 @@ class CleanLogin_Captcha {
         return $text;
     }
 
+    protected function random($min, $max) {
+        $min = (int) $min;
+        $max = (int) $max;
+        if (function_exists('random_int')) {
+            return random_int($min, $max);
+        }
+        return mt_rand($min, $max);
+    }
+
     /**
      * Random text generation
      *
@@ -176,19 +185,19 @@ class CleanLogin_Captcha {
      */
     protected function GetRandomCaptchaText($length = null) {
         if (empty($length)) {
-            $length = wp_rand($this->minWordLength, $this->maxWordLength);
+            $length = $this->random($this->minWordLength, $this->maxWordLength);
         }
 
         $words  = "abcdefghijlmnopqrstvwyz";
         $vocals = "aeiou";
 
         $text  = "";
-        $vocal = wp_rand(0, 1);
+        $vocal = $this->random(0, 1);
         for ($i=0; $i<$length; $i++) {
             if ($vocal) {
-                $text .= substr($vocals, wp_rand(0, 4), 1);
+                $text .= substr($vocals, $this->random(0, 4), 1);
             } else {
-                $text .= substr($words, wp_rand(0, 22), 1);
+                $text .= substr($words, $this->random(0, 22), 1);
             }
             $vocal = !$vocal;
         }
@@ -202,8 +211,8 @@ class CleanLogin_Captcha {
 
         $x1 = $this->width*$this->scale*.15;
         $x2 = $this->textFinalX;
-        $y1 = wp_rand($this->height*$this->scale*.40, $this->height*$this->scale*.65);
-        $y2 = wp_rand($this->height*$this->scale*.40, $this->height*$this->scale*.65);
+        $y1 = $this->random($this->height*$this->scale*.40, $this->height*$this->scale*.65);
+        $y2 = $this->random($this->height*$this->scale*.40, $this->height*$this->scale*.65);
         $width = $this->lineWidth/2*$this->scale;
 
         for ($i = $width*-1; $i <= $width; $i++) {
@@ -233,8 +242,8 @@ class CleanLogin_Captcha {
         $y      = round(($this->height*27/40)*$this->scale);
         $length = strlen($text);
         for ($i=0; $i<$length; $i++) {
-            $degree   = wp_rand($this->maxRotation*-1, $this->maxRotation);
-            $fontsize = wp_rand($fontcfg['minSize'], $fontcfg['maxSize'])*$this->scale*$fontSizefactor;
+            $degree   = $this->random($this->maxRotation*-1, $this->maxRotation);
+            $fontsize = $this->random($fontcfg['minSize'], $fontcfg['maxSize'])*$this->scale*$fontSizefactor;
             $letter   = substr($text, $i, 1);
 
             if ($this->shadowColor) {
@@ -256,8 +265,8 @@ class CleanLogin_Captcha {
      */
     protected function WaveImage() {
         // X-axis wave generation
-        $xp = $this->scale*$this->Xperiod*wp_rand(1,3);
-        $k = wp_rand(0, 100);
+        $xp = $this->scale*$this->Xperiod*$this->random(1,3);
+        $k = $this->random(0, 100);
         for ($i = 0; $i < ($this->width*$this->scale); $i++) {
             imagecopy($this->im, $this->im,
                 $i-1, sin($k+$i/$xp) * ($this->scale*$this->Xamplitude),
@@ -265,8 +274,8 @@ class CleanLogin_Captcha {
         }
 
         // Y-axis wave generation
-        $k = wp_rand(0, 100);
-        $yp = $this->scale*$this->Yperiod*wp_rand(1,2);
+        $k = $this->random(0, 100);
+        $yp = $this->scale*$this->Yperiod*$this->random(1,2);
         for ($i = 0; $i < ($this->height*$this->scale); $i++) {
             imagecopy($this->im, $this->im,
                 sin($k+$i/$yp) * ($this->scale*$this->Yamplitude), $i-1,

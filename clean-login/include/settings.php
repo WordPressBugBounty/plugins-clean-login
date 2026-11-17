@@ -758,7 +758,7 @@ class CleanLogin_Settings
         <div class="card">
             <h3 class="title" id="like-donate-more" style="cursor: pointer;"><?php echo esc_html__('Do you like it?', 'clean-login'); ?> <span id="like-donate-arrow" class="dashicons dashicons-arrow-down"></span><span id="like-donate-smile" class="dashicons dashicons-smiley hidden"></span></h3>
             <div class="hidden" id="like-donate">
-                <p>Hi there! We are <a href="https://twitter.com/fjcarazo" target="_blank" title="Javier Carazo">Javier Carazo</a> and <a href="https://twitter.com/ahornero" target="_blank" title="Alberto Hornero">Alberto Hornero</a> from <a href="http://codection.com">Codection</a>, developers of this plugin. We have been spending many hours to develop this plugin, we keep updating it and we always try do the best in the <a href="https://wordpress.org/support/plugin/clean-login">support forum</a>.</p>
+                <p>Hi there! We are <a href="https://codection.com">Codection</a>, the team behind this plugin, created by Alberto Hornero in 2014. We have been spending many hours to develop this plugin, we keep updating it and we always try do the best in the <a href="https://wordpress.org/support/plugin/clean-login">support forum</a>.</p>
                 <p>If you like it, you can <strong>buy us a cup of coffee</strong> or whatever ;-)</p>
                 <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
                     <input type="hidden" name="cmd" value="_s-xclick">
@@ -836,6 +836,7 @@ class CleanLogin_Settings
             </tbody>
         </table>
     <?php
+        CleanLogin_CrossSell::render_users_line();
     }
 
     function maybe_update_options()
