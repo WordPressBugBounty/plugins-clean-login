@@ -3,8 +3,8 @@ Contributors: carazo
 Donate link: https://codection.com/?post_type=surl&p=8712&preview=true
 Tags: login, registration, custom login page, password reset, user profile
 Requires at least: 5.5
-Tested up to: 7.1
-Stable tag: 2.0.3
+Tested up to: 7.2
+Stable tag: 2.0.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -16,7 +16,7 @@ Frontend login, registration, profile and password reset forms with blocks or sh
 
 Move login, registration, password reset and profile editing out of wp-login.php and into the pages of your own site. Add a block or a shortcode to any page and the form appears with the look of your theme. The forms find each other and link to each other on their own, and wp-login.php and wp-admin can send your visitors to your new login page.
 
-✅ Tested with WordPress 7.1
+✅ Tested with WordPress 7.2
 
 ✅ More than 5,000 active installations
 
@@ -186,6 +186,11 @@ Yes. Go to Settings → Clean Login → "Lost password link text" and enter your
 Use the shortcode `[clean-login-logout]` anywhere on your site. It only renders for logged-in users and accepts an optional `text` attribute to customise the link label, e.g. `[clean-login-logout text="Sign out"]`.
 
 == Changelog ==
+
+= 2.0.4 - 2026-11-26 =
+*   Fixed: the image of the letters CAPTCHA could be blank on some servers (PHP thread safe builds) because the fonts were loaded with a relative path
+*   PHP 8.5 compatibility: removed the calls to imagedestroy(), deprecated since PHP 8.5
+*   Tested with WordPress 7.2
 
 = 2.0.3 - 2026-11-16 =
 *   Fixed: the image of the letters CAPTCHA of the registration form was not shown since version 1.16 (a PHP error), so nobody could register while the CAPTCHA was enabled

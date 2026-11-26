@@ -129,11 +129,6 @@ class CleanLogin_Captcha {
      * Creates the image resources
      */
     protected function ImageAllocate() {
-        // Cleanup
-        if (!empty($this->im)) {
-            imagedestroy($this->im);
-        }
-
         $this->im = imagecreatetruecolor($this->width*$this->scale, $this->height*$this->scale);
 
         // Background color
@@ -230,7 +225,7 @@ class CleanLogin_Captcha {
         }
 
         // Full path of font file
-        $fontfile = $this->resourcesPath.'/fonts/'.$fontcfg['font'];
+        $fontfile = __DIR__.'/'.$this->resourcesPath.'/fonts/'.$fontcfg['font'];
 
 
         /** Increase font-size for shortest words: 9% for each glyp missing */
@@ -294,7 +289,6 @@ class CleanLogin_Captcha {
             $this->width, $this->height,
             $this->width*$this->scale, $this->height*$this->scale
         );
-        imagedestroy($this->im);
         $this->im = $imResampled;
     }
 
@@ -315,7 +309,7 @@ class CleanLogin_Captcha {
      * Cleanup
      */
     protected function Cleanup() {
-        imagedestroy($this->im);
+        $this->im = null;
     }
 }
 
